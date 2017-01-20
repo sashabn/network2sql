@@ -17,6 +17,7 @@
 #include <cstring>
 #include <sys/msg.h>
 #include "definicije.h"
+#include <internalmessage.h>
 
 using namespace std;
 
@@ -55,7 +56,7 @@ private:
     //network stuf
     struct sockaddr_in srvaddr,cliaddr;
     char *buffer,*recvbuff,*sndbuff;
-    message msg;
+    InternalMessage *msg;
     int maxfp1;
     int msqidC;
     socklen_t clen;

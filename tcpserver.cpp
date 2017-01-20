@@ -186,9 +186,10 @@ bool TcpServer::createServer()
 void TcpServer::afterConnect(int fd)
 {
     int sendId[2]={1,fd};
-    memcpy(msg.text,sendId,sizeof(sendId));
-    msg.type=1;
-    msgsnd(msqidC,&msg,sizeof(sendId),0);
+    msg=new InternalMessage();
+    msg->setSenderFd(fd);
+    msg->setCmdType(1);
+    msgsnd(msqidC,&msg,sizeof(InternalMessage)-4,0);
     cout<<"Konekcija dolazi sa ";
     char *r=Server::getpeerip(fd);
     cout<<r<<" "<<fd<<endl;
@@ -238,8 +239,8 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
     char *r;
     int sendId[2]={2,fd};
 
-    memcpy(msg.text,sendId,sizeof(sendId));
-    msgsnd(msqidC,&msg,sizeof(sendId),0);
+   // memcpy(msg.text,sendId,sizeof(sendId));
+    //msgsnd(msqidC,&msg,sizeof(sendId),0);
     if(delegate!=NULL){
         memcpy(recvbuff,buf,bufSize);
         delegate->decrypt(recvbuff,bufSize);
@@ -257,6 +258,10 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
         sizeMsg=ntohl(*((int*)ptr));
         ptr+=sizeMsg;
         msgVal=ntohl(*((int*)ptr));
+        break;
+    case 2:
+        break;
+    case 3:
         break;
     }
     cout<<"Poruka sa clienta "<<r<<" "<<msgVal<<" "<<(int)buf[0]<<endl;

@@ -1,7 +1,9 @@
 TEMPLATE = app
+QT += core sql
+QT -= gui
 CONFIG += console c++11
 CONFIG -= app_bundle
-CONFIG -= qt
+
 
 SOURCES += main.cpp \
     server.cpp \
@@ -10,7 +12,9 @@ SOURCES += main.cpp \
     database.cpp \
     mysqldatabase.cpp \
     gtime.cpp \
-    gdate.cpp
+    gdate.cpp \
+    messageparser.cpp \
+    internalmessage.cpp
 
 HEADERS += \
     server.h \
@@ -20,6 +24,8 @@ HEADERS += \
     database.h \
     mysqldatabase.h \
     gtime.h \
-    gdate.h
+    gdate.h \
+    messageparser.h \
+    internalmessage.h
 
 LIBS += -lpthread -lmysqlcppconn

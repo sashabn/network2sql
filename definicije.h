@@ -4,6 +4,7 @@
 #define CENTRAL_MAILBOX 1200
 struct message {
     long type;
+    int fd;
     char text[20];
 };
 static int msqidC;

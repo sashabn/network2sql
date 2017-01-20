@@ -4,6 +4,14 @@
 #include "definicije.h"
 #include <sys/signal.h>
 #include <gdate.h>
+#include <QSqlDatabase>
+#include <QSqlDriver>
+#include <QSqlQuery>
+#include <QString>
+#include <QVariant>
+#include <QDebug>
+#include <QSqlRecord>
+#include <internalmessage.h>
 
 typedef void Sigfunc(int);
 
@@ -33,15 +41,10 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    GDate *d=GDate::fromString("2017-01-02","%Y-%m-%d");
-    if(d!=NULL){
-       cout<< d->toString()<<endl;
-    }
-    cout<<GDate(time(NULL)-(3600*24)*10).toString()<<endl;
     signal(SIGINT,&sighndl);
     signal(SIGUSR1,&sighndl);
     running=true;
-    message msg;
+    InternalMessage *msg=new InternalMessage;
     cout<<"PROSO"<<endl;
     msqidC = msgget(IPC_PRIVATE, 0600|IPC_CREAT|IPC_EXCL);
     TcpServer *s=new TcpServer;
@@ -52,15 +55,17 @@ int main(int argc, char *argv[])
 
     while(running){
         int rsize;
-        rsize=msgrcv(msqidC,&msg,20,0,0);
+        rsize=msgrcv(msqidC,msg,sizeof(InternalMessage),0,0);
         if(rsize<0){
             if(errno==EINTR){
                 cout<<"PONOVO AJD"<<endl;
                 continue;
             }
+            cout<<strerror(errno)<<endl;
             return -1;
         }
-        int *id=(int*)msg.text;
+
+        cout<<"Poruku salje1 "<<msg->getSenderFd()<<endl;
         //cout<<*id<<endl;//tip poruke
         //cout<<*++id<<endl;// socket
 
