@@ -19,6 +19,7 @@ protected:
     AbstractDelegate *delegate;
     virtual void clientClose(int fd)=0;
     virtual void conAccept(int fd);
+    virtual bool sendDataToClient(char *data,int dataSize,int socketfd)=0;
 private:
     std::mutex m1;
 

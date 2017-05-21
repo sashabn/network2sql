@@ -17,6 +17,8 @@
 #include <cstring>
 #include <sys/msg.h>
 #include "definicije.h"
+#include <internalmessage.h>
+#include "fileprovider.h"
 
 using namespace std;
 
@@ -28,6 +30,7 @@ public:
     ~TcpServer();
     void stopServer();
     void setMsgId(int id);
+    virtual bool sendDataToClient(char *data,int dataSize,int socketfd);
 private:
     void run();
     typedef void Sigfunc(int);
@@ -43,6 +46,7 @@ private:
 
     bool serverRun;//thread condition
     thread *t1;//obrisan
+    mutex m1;
 
     //select fds
     fd_set readSock,masterRSock;
@@ -55,7 +59,7 @@ private:
     //network stuf
     struct sockaddr_in srvaddr,cliaddr;
     char *buffer,*recvbuff,*sndbuff;
-    message msg;
+    InternalMessage *msg;
     int maxfp1;
     int msqidC;
     socklen_t clen;

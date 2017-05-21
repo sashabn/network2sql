@@ -4,7 +4,7 @@
 #define CENTRAL_MAILBOX 1200
 struct message {
     long type;
-    char text[20];
+    char *msg;
 };
 static int msqidC;
 #define BUFSIZE 4096
