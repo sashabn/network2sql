@@ -6,7 +6,6 @@ struct message {
     long type;
     char *msg;
 };
-static int msqidC;
 #define BUFSIZE 4096
 
 #define CLIENT_CONNECTED 1

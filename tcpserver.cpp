@@ -1,7 +1,7 @@
 #include "tcpserver.h"
 TcpServer* TcpServer::instance=NULL;
 
-TcpServer::TcpServer()
+TcpServer::TcpServer(MessageQueue *q):queue(q)
 {
 
     sockfd=-1;
@@ -15,7 +15,6 @@ TcpServer::TcpServer()
     buffer=new char[BUFSIZE];
     recvbuff=new char[BUFSIZE];
     sndbuff=new char[BUFSIZE];
-    cout<<"TEST"<<msqidC<<endl;
     if(!createServer()){
         //greska
         cout<<"GRESKA";
@@ -82,7 +81,7 @@ ponovo:
                     maxfp1=(maxfp1>csock)?maxfp1:(csock+1);
                     cout<<"maxfp1 je "<<maxfp1<<endl;
                     afterConnect(csock);
-                    
+
                 }else{//konekcija dolazi sa klijenta
 ponovoRead:
                     res=read(i,buffer,BUFSIZE);
@@ -106,8 +105,8 @@ ponovoRead:
                 }
             }
         }
-        
-        
+
+
     }
 }
 
@@ -190,19 +189,16 @@ void TcpServer::afterConnect(int fd)
     int sendId[2]={1,fd};
     char *r=Server::getpeerip(fd);
     m1.lock();
-    if(msg!=NULL)
-        delete msg;
     msg=new InternalMessage();//treba obrisati negde
     msg->setSenderFd(fd);
     msg->setCmdType(1);
     msg->setData(r,strlen(r));
     delete [] r;
-    msgsnd(msqidC,msg,sizeof(InternalMessage),0);
+    queue->addMessage(msg);
     m1.unlock();
 
 pocetak:
     int sread=read(fd,buffer,BUFSIZE);
-    write(fd,buffer,sread);
     if(sread==0){//konekcija je zavrsena
         close(fd);
         FD_CLR(fd,&masterRSock);
@@ -231,7 +227,7 @@ void TcpServer::clientClose(int fd)
 {
     char *r=Server::getpeerip(fd);
     cout<<"Client "<<r<<" was disconnected!!"<<" "<<fd<<endl;
-    delete r;
+    delete [] r;
     FD_CLR(fd,&masterRSock);
     FD_CLR(fd,&readSock);
     close(fd);
@@ -244,20 +240,13 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
     char *r;
     int sendId[2]={2,fd};
 
-    // memcpy(msg.text,sendId,sizeof(sendId));
-    //msgsnd(msqidC,&msg,sizeof(sendId),0);
-    if(delegate!=NULL){
-        memcpy(recvbuff,buf,bufSize);
-        delegate->decrypt(recvbuff,bufSize);
-    }
     bool slika=false;
     int bufferSize=20;
-    char *bufferSlika=NULL;
+//    char *bufferSlika=NULL;
     if(ntohl(*((int*)buf))==12){//dobijam sliku
         slika=true;
         bufferSize+=ntohl(*((int*)(buf+16)));
-
-        bufferSlika=new char[bufferSize];
+//        bufferSlika=new char[bufferSize];
         memcpy(bufferSlika,buf,bufSize);
     }else if(ntohl(*((int*)buf))==13){//dobijam vreme i sliku
 
@@ -265,7 +254,6 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
         bufferSize=ntohl(*((int*)(buf+20+vremeSize)));
         cout<<"SLIKA JE TESKA "<<bufferSize<<endl;
         bufferSize+=(vremeSize+24);
-        bufferSlika=new char[bufferSize];
         memcpy(bufferSlika,buf,bufSize);
         slika=true;
 
@@ -289,12 +277,8 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
             bufSave+=n;
         }
     }
-    if(!slika)
-        write(fd,buf,bufSize);//protocol return back
 
     m1.lock();
-    if(msg!=NULL)
-        delete msg;
     msg=new InternalMessage();//treba obrisati negde
     msg->setSenderFd(fd);
     msg->setCmdType(2);
@@ -303,24 +287,20 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
     else
         msg->setData(bufferSlika,bufferSize);
 
-    msgsnd(msqidC,msg,sizeof(InternalMessage),0);
+    queue->addMessage(msg);
     m1.unlock();
-    if(bufferSlika!=NULL){
-        delete bufferSlika;
-    }
+//    if(bufferSlika!=NULL){
+//        delete [] bufferSlika;
+//    }
 
 
 
 }
 
-void TcpServer::setMsgId(int id)
-{
-    msqidC=id;
-}
 
-bool TcpServer::sendDataToClient(char *data, int dataSize, int socketfd)
+bool TcpServer::sendDataToClient(const char *data, int dataSize, int socketfd)
 {
-    char *ptrBuf=data;
+    const char *ptrBuf=data;
     int bytesLeft=dataSize;
     int bytesSend=0;
     int n;
@@ -333,9 +313,11 @@ bool TcpServer::sendDataToClient(char *data, int dataSize, int socketfd)
         if(n<0){
             if(errno==EINTR)
                 continue;
-            return false;
+            std::cout<<strerror(errno)<<std::endl;
+             return false;
         }
         bytesSend+=n;
         bytesLeft-=n;
     }
+    return true;
 }

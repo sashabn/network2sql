@@ -11,19 +11,18 @@
 #include <database.h>
 #include <mysqldatabase.h>
 #include "fileprovider.h"
+#include "messagequeue.h"
 
 using namespace std;
 
 class MessageAsyncProccessor
 {
 public:
-    MessageAsyncProccessor(int mId);
+    MessageAsyncProccessor(MessageQueue *queue);
     ~MessageAsyncProccessor();
-    void setMsgId(int id);
     void addMessage(MessageParser* p);
 private:
     vector<MessageParser*> messageQueue;
-    int msgidC;
     //thread stuff
     condition_variable cv;
     void run();
@@ -37,6 +36,7 @@ private:
     //database stuf
     Database *db;
     FileProvider *file;
+    MessageQueue *m_queue;
 };
 
 #endif // MESSAGEASYNCPROCCESSOR_H

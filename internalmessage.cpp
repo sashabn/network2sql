@@ -13,6 +13,21 @@ InternalMessage::InternalMessage()
 
 InternalMessage::~InternalMessage()
 {
+    if(data!=NULL){
+        delete [] data;
+    }
+}
+
+InternalMessage::InternalMessage(const InternalMessage &rhs)
+{
+    std::cout<<"COPY CONST"<<std::endl;
+    this->type=rhs.type;
+    this->fd=rhs.fd;
+    this->cmdType=rhs.cmdType;
+    this->rfid=rhs.rfid;
+    this->dataSize=rhs.dataSize;
+    this->data=new char(this->dataSize);
+    memcpy(this->data,rhs.data,this->dataSize);
 
 }
 
@@ -33,8 +48,11 @@ void InternalMessage::setSenderFd(const int &sFd)
 
 void InternalMessage::setData(const char *lpdata, int iDataSize)
 {
-    if(this->data!=NULL)
-        delete this->data;
+    if(this->data!=NULL){
+        delete [] this->data;
+        this->data=NULL;
+        iDataSize=0;
+    }
     this->data=new char[iDataSize];
     dataSize=iDataSize;
     memcpy(this->data,lpdata,iDataSize);
@@ -56,10 +74,10 @@ int InternalMessage::getSenderFd() const
     return fd;
 }
 
-char *InternalMessage::getData()
-{
-    return this->data;
-}
+//char *InternalMessage::getData()
+//{
+//    return this->data;
+//}
 
 const char *InternalMessage::getData() const
 {
@@ -71,7 +89,3 @@ int InternalMessage::getDataSize() const
     return dataSize;
 }
 
-void InternalMessage::deleteData()
-{
-    delete [] data;
-}

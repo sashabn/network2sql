@@ -16,7 +16,11 @@ SOURCES += main.cpp \
     messageparser.cpp \
     internalmessage.cpp \
     messageasyncproccessor.cpp \
-    fileprovider.cpp
+    fileprovider.cpp \
+    messagequeue.cpp \
+    evprotocolheader.cpp \
+    evprotocolmsg.cpp \
+    evprotocolpayload.cpp
 
 HEADERS += \
     server.h \
@@ -30,6 +34,10 @@ HEADERS += \
     messageparser.h \
     internalmessage.h \
     messageasyncproccessor.h \
-    fileprovider.h
+    fileprovider.h \
+    messagequeue.h \
+    evprotocolheader.h \
+    evprotocolmsg.h \
+    evprotocolpayload.h
 
 LIBS += -lpthread -lmysqlcppconn

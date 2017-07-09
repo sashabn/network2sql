@@ -19,6 +19,7 @@
 #include "definicije.h"
 #include <internalmessage.h>
 #include "fileprovider.h"
+#include "messagequeue.h"
 
 using namespace std;
 
@@ -26,11 +27,10 @@ using namespace std;
 class TcpServer : public Server
 {
 public:
-    TcpServer();
+    TcpServer(MessageQueue *q);
     ~TcpServer();
     void stopServer();
-    void setMsgId(int id);
-    virtual bool sendDataToClient(char *data,int dataSize,int socketfd);
+    virtual bool sendDataToClient(const char *data,int dataSize,int socketfd);
 private:
     void run();
     typedef void Sigfunc(int);
@@ -61,14 +61,15 @@ private:
     char *buffer,*recvbuff,*sndbuff;
     InternalMessage *msg;
     int maxfp1;
-    int msqidC;
     socklen_t clen;
+    MessageQueue *queue;
 
     //network functions
     bool createServer();
     void afterConnect(int fd);
     void clientClose(int fd);
     void parseMsg(char *buf,int bufSize,int fd);
+    char bufferSlika[1024*1024*3];
 
 
 };

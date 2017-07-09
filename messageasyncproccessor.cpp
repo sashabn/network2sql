@@ -1,6 +1,6 @@
 #include "messageasyncproccessor.h"
 
-MessageAsyncProccessor::MessageAsyncProccessor(int mId):msgidC(mId)
+MessageAsyncProccessor::MessageAsyncProccessor(MessageQueue *mId):m_queue(mId)
 {
     threadRun=true;
     t1=NULL;
@@ -17,10 +17,6 @@ MessageAsyncProccessor::~MessageAsyncProccessor()
             t1->join();
 }
 
-void MessageAsyncProccessor::setMsgId(int id)
-{
-    msgidC=id;
-}
 
 void MessageAsyncProccessor::addMessage(MessageParser *p)
 {
@@ -56,16 +52,13 @@ void MessageAsyncProccessor::run()
         switch (t) {
         case MessageType::RequestStatus:
             msg=db->getResult(p);
-            msgsnd(msgidC,msg,sizeof(InternalMessage),0);
-            delete msg;
+            m_queue->addMessage(msg);
             m2.unlock();
             break;
         case MessageType::RequestRadnikPicture:
             msg=file->getRadnikPicture(p);
             cout<<"SALJEM ZAHTJEV ZA SLIKU bajti"<<msg->getDataSize()<<endl;
-            msgsnd(msgidC,msg,sizeof(InternalMessage),0);
-            delete msg;
-
+            m_queue->addMessage(msg);
             m2.unlock();
             break;
         case MessageType::Ulaz:
@@ -78,8 +71,7 @@ void MessageAsyncProccessor::run()
         case MessageType::PrivatnoKraj:
             msg=db->getResult(p);
             if(msg!=NULL){
-                msgsnd(msgidC,msg,sizeof(InternalMessage),0);
-                delete msg;
+                m_queue->addMessage(msg);
             }
             m2.unlock();
             break;
@@ -94,9 +86,7 @@ void MessageAsyncProccessor::run()
         case MessageType::RequestActionSlika:
             msg=file->getRadnikActionPicture(p);
             cout<<"SALJEM ZAHTJEV ZA SLIKU bajti"<<msg->getDataSize()<<endl;
-            msgsnd(msgidC,msg,sizeof(InternalMessage),0);
-            delete msg;
-
+            m_queue->addMessage(msg);
             m2.unlock();
             break;
 
@@ -104,6 +94,7 @@ void MessageAsyncProccessor::run()
             m2.unlock();
             break;
         }
+        delete p;
 
 
 

@@ -51,6 +51,7 @@ InternalMessage *FileProvider::getRadnikPicture(MessageParser *r)
         picFile.read(ptrBuff,picSize);
         cout<<"PUNIM BUFFER SA "<<picSize<<endl;
         msg->setData(buffer,picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/);
+        delete [] buffer;
         return msg;
 
     }else{
@@ -90,6 +91,7 @@ InternalMessage *FileProvider::getRadnikPicture(MessageParser *r)
         picFileD.read(ptrBuff,picSize);
         cout<<"PUNIM BUFFER SA "<<picSize<<endl;
         msg->setData(buffer,picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/);
+        delete [] buffer;
         return msg;
 
     }
@@ -143,6 +145,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(MessageParser *r)
         picFile.read(ptrBuff,picSize);
         cout<<"PUNIM BUFFER SA "<<picSize<<endl;
         msg->setData(buffer,picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/);
+        delete [] buffer;
         return msg;
 
     }else{
@@ -182,6 +185,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(MessageParser *r)
         picFileD.read(ptrBuff,picSize);
         cout<<"PUNIM BUFFER SA "<<picSize<<endl;
         msg->setData(buffer,picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/);
+        delete [] buffer;
         return msg;
 
     }
@@ -208,20 +212,18 @@ bool FileProvider::saveRadnikPicture(MessageParser *r)
             cout<<"LOKACIJA SLIKE za snimanje OK"<<tmp<<endl;
             picFile.flush();
             picFile.close();
-            delete r;
-
             return true;
         }else{
             cout<<"LOKACIJA SLIKE za snimanje NIJE OK"<<tmp<<endl;
             picFile.flush();
             picFile.close();
-            delete r;
             return false;
         }
     }else{
-        delete r;
         return false;
     }
+    return true;
+
 }
 
 bool FileProvider::saveRadnikActionPicture(MessageParser *r)
@@ -246,18 +248,15 @@ bool FileProvider::saveRadnikActionPicture(MessageParser *r)
             cout<<"LOKACIJA SLIKE za snimanje OK"<<tmp<<endl;
             picFile.flush();
             picFile.close();
-            delete r;
-
             return true;
         }else{
             cout<<"LOKACIJA SLIKE za snimanje NIJE OK"<<tmp<<endl;
             picFile.flush();
             picFile.close();
-            delete r;
             return false;
         }
     }else{
-        delete r;
         return false;
     }
+    return true;
 }

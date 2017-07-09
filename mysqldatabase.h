@@ -31,6 +31,7 @@ private:
     QString dbUser;
     QString dbPassword;
     QString dbDatabaseName;
+    char radnikStatusBuffer[512];
     bool radnikUlaz(long long int radnikId,QDateTime time);
     bool radnikIzlaz(long long int radnikId,QDateTime time);
     bool radnikTeren(long long int radnikId,QDateTime time);

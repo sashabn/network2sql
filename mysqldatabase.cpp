@@ -276,6 +276,7 @@ int MysqlDatabase::getRadnikStatus(long long int radnikId)
 
 InternalMessage *MysqlDatabase::getRadnikStatus(MessageParser *p)
 {
+    memset(radnikStatusBuffer,0x00,sizeof(radnikStatusBuffer));
     InternalMessage *msg=new InternalMessage;
     msg->setCmdType(3);
     msg->setSenderFd(p->getSenderFd());
@@ -299,11 +300,11 @@ InternalMessage *MysqlDatabase::getRadnikStatus(MessageParser *p)
         cout<<"IME "<<ime<<endl;
 
         vrijemeStatus=htonl(vrijemeStatus);
-        char buf[sizeof(int)/*id odg*/+sizeof(long long int)/*id radnika*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/+sizeof(int)/*poruka status*/
+        int bufferSize=sizeof(int)/*id odg*/+sizeof(long long int)/*id radnika*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/+sizeof(int)/*poruka status*/
                 +sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke ime*/+strlen(ime)/*poruka ime*/
                 +sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke prezime*/+strlen(prezime)/*poruka prezime*/
-                +sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke funkcija*/+strlen(funkcija)/*poruka funkcija*/];
-        char *ptrbuf=buf;
+                +sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke funkcija*/+strlen(funkcija)/*poruka funkcija*/;
+        char *ptrbuf=radnikStatusBuffer;
         int iTmp=p->getMessageType();
         iTmp=htonl(iTmp);
         ptrbuf+=fillBuff(ptrbuf,&iTmp,sizeof(iTmp));
@@ -348,8 +349,10 @@ InternalMessage *MysqlDatabase::getRadnikStatus(MessageParser *p)
 
 
 
-        msg->setData(buf,sizeof(buf));
-        delete ime;
+        msg->setData(radnikStatusBuffer,bufferSize);
+        delete [] ime;
+        delete [] prezime;
+        delete [] funkcija;
         return msg;
     }
     msg->setData("FALSE",strlen("FALSE"));

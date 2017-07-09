@@ -22,10 +22,12 @@ GDate *GDate::fromString(const char *date, const char *format)
         tmpObj->epochTime=mktime(tmpObj->my_tm);
         return tmpObj;
     }else{
+        delete tmpObj;
         cout<<strerror(errno)<<endl;
         return NULL;
     }
 }
+
 
 const char *GDate::toString(const char *format)
 {
@@ -51,6 +53,9 @@ const char *GDate::toString(const char *format)
         strcpy(ptrbuf,day);
         ptrbuf[strlen(day)]='\0';
         ptrbuf+=strlen(day)+1;
+        delete [] year;
+        delete [] month;
+        delete [] day;
 
         return buf;
         }else{

@@ -33,5 +33,5 @@ void Server::conAccept(int fd)
 {
     char *wrbuf="Connection accept!";
     cout<<"PRIHVACAM"<<endl;
-    write(fd,wrbuf,strlen(wrbuf));
+     write(fd,wrbuf,strlen(wrbuf));
 }

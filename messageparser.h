@@ -23,7 +23,7 @@ enum MessageType{RequestStatus=1,
 class MessageParser
 {
 public:
-    MessageParser(const unsigned char *data, const int &dataSize,int sender);
+    MessageParser(const char *data, const int &dataSize,int sender);
     ~MessageParser();
     const MessageType &getMessageType()const;
     long long int getRadnikId()const;
