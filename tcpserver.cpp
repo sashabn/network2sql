@@ -98,7 +98,9 @@ ponovoRead:
                         rsize--;
                         continue;
                     }
-                    parseMsg(buffer,res,i);
+                    if(fdBufferMap[i]!=NULL){
+                        fdBufferMap[i]->addBuffer(buffer,res);
+                    }
                     rsize--;
                     continue;
 
@@ -186,6 +188,7 @@ bool TcpServer::createServer()
 
 void TcpServer::afterConnect(int fd)
 {
+    fdBufferMap[fd]=new NetworkDecoder<TcpServer>(1024*1024*3,this,&TcpServer::parseMsg,fd);
     int sendId[2]={1,fd};
     char *r=Server::getpeerip(fd);
     m1.lock();
@@ -212,7 +215,7 @@ pocetak:
     }
 
     if((res=stringF(buffer,sread,"+OK",3))!=0){
-        cout<<res<<" OVO NIJE PROSAO"<<(int)buffer[0]<<" "<<(int)'+'<<" "<<sread<<endl;
+        cout<<res<<" 0NIJE PROSAO"<<(int)buffer[0]<<" "<<(int)'+'<<" "<<sread<<endl;
         this->clientClose(fd);
     }else{
         this->conAccept(fd);
@@ -230,6 +233,10 @@ void TcpServer::clientClose(int fd)
     delete [] r;
     FD_CLR(fd,&masterRSock);
     FD_CLR(fd,&readSock);
+    if(fdBufferMap[fd]!=NULL){
+        delete fdBufferMap[fd];
+    }
+    fdBufferMap[fd]=NULL;
     close(fd);
 }
 
@@ -237,64 +244,23 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
 {
 
 
-    char *r;
-    int sendId[2]={2,fd};
-
-    bool slika=false;
-    int bufferSize=20;
-//    char *bufferSlika=NULL;
-    if(ntohl(*((int*)buf))==12){//dobijam sliku
-        slika=true;
-        bufferSize+=ntohl(*((int*)(buf+16)));
-//        bufferSlika=new char[bufferSize];
-        memcpy(bufferSlika,buf,bufSize);
-    }else if(ntohl(*((int*)buf))==13){//dobijam vreme i sliku
-
-        int vremeSize=ntohl(*((int*)(buf+16)));
-        bufferSize=ntohl(*((int*)(buf+20+vremeSize)));
-        cout<<"SLIKA JE TESKA "<<bufferSize<<endl;
-        bufferSize+=(vremeSize+24);
-        memcpy(bufferSlika,buf,bufSize);
-        slika=true;
-
-    }
-    int bufLeft=bufferSize-bufSize;
-    int bufSave=bufSize;
-    if(slika){
-        while(bufLeft>0){
-            int n=read(fd,bufferSlika+bufSave,BUFSIZE);
-            if(n<0){
-                if(errno==EINTR)
-                    continue;
-                clientClose(fd);
-                return;
-            }
-            if(n==0){
-                clientClose(fd);
-                return;
-            }
-            bufLeft-=n;
-            bufSave+=n;
-        }
-    }
 
     m1.lock();
     msg=new InternalMessage();//treba obrisati negde
     msg->setSenderFd(fd);
     msg->setCmdType(2);
-    if(!slika)
-        msg->setData(buffer,bufSize);
-    else
-        msg->setData(bufferSlika,bufferSize);
+    msg->setData(buf,bufSize);
 
     queue->addMessage(msg);
     m1.unlock();
-//    if(bufferSlika!=NULL){
-//        delete [] bufferSlika;
-//    }
+    //    if(bufferSlika!=NULL){
+    //        delete [] bufferSlika;
+    //    }
+}
 
-
-
+void TcpServer::testF(char *test, int size)
+{
+    write(2,test,size);
 }
 
 
@@ -314,7 +280,7 @@ bool TcpServer::sendDataToClient(const char *data, int dataSize, int socketfd)
             if(errno==EINTR)
                 continue;
             std::cout<<strerror(errno)<<std::endl;
-             return false;
+            return false;
         }
         bytesSend+=n;
         bytesLeft-=n;

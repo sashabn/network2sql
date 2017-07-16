@@ -3,23 +3,11 @@
 #include <netinet/in.h>
 #include <cstring>
 #include <iostream>
+#include "definicije.h"
 
 using namespace std;
 
-enum MessageType{RequestStatus=1,
-                RequestRadnikInfo,
-                RequestRadnikPicture,
-                Ulaz,
-                Izlaz,
-                TerenPocetak,
-                TerenKraj,
-                PauzaPocetak,
-                PauzaKraj,
-                PrivatnoPocetak,
-                PrivatnoKraj,
-                UpdateSlika,
-                ActionSlika,
-                RequestActionSlika};
+
 class MessageParser
 {
 public:

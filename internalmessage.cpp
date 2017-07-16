@@ -54,6 +54,11 @@ void InternalMessage::setData(const char *lpdata, int iDataSize)
         iDataSize=0;
     }
     this->data=new char[iDataSize];
+    if(this->data==NULL){
+
+        std::cout<<"GRESKA"<<std::endl;
+        return;
+    }
     dataSize=iDataSize;
     memcpy(this->data,lpdata,iDataSize);
 }

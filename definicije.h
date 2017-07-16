@@ -37,5 +37,20 @@ inline int stringF(char *s1, int ls1, char *s2, int ls2)
     return -1;
 }
 
+enum MessageType{RequestStatus=1,
+                RequestRadnikInfo,
+                RequestRadnikPicture,
+                Ulaz,
+                Izlaz,
+                TerenPocetak,
+                TerenKraj,
+                PauzaPocetak,
+                PauzaKraj,
+                PrivatnoPocetak,
+                PrivatnoKraj,
+                UpdateSlika,
+                ActionSlika,
+                RequestActionSlika};
+
 
 #endif // DEFINICIJE_H

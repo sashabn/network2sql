@@ -20,6 +20,9 @@
 #include <internalmessage.h>
 #include "fileprovider.h"
 #include "messagequeue.h"
+#include "networkdecoder.h"
+#include "networkdecoder.h"
+#include <map>
 
 using namespace std;
 
@@ -63,6 +66,8 @@ private:
     int maxfp1;
     socklen_t clen;
     MessageQueue *queue;
+    NetworkDecoder<TcpServer> *decoder;
+    std::map<int,NetworkDecoder<TcpServer>*> fdBufferMap;
 
     //network functions
     bool createServer();
@@ -70,6 +75,7 @@ private:
     void clientClose(int fd);
     void parseMsg(char *buf,int bufSize,int fd);
     char bufferSlika[1024*1024*3];
+    void testF(char *test,int size);
 
 
 };
