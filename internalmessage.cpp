@@ -9,6 +9,7 @@ InternalMessage::InternalMessage()
     rfid=0;
     dataSize=0;
     data=NULL;
+    cout<<"Internal message created!!"<<endl;
 }
 
 InternalMessage::~InternalMessage()
@@ -16,11 +17,12 @@ InternalMessage::~InternalMessage()
     if(data!=NULL){
         delete [] data;
     }
+    cout<<"Internal message destroyed !!"<<endl;
 }
 
 InternalMessage::InternalMessage(const InternalMessage &rhs)
 {
-    std::cout<<"COPY CONST"<<std::endl;
+    cout<<"Internal message created!!"<<endl;
     this->type=rhs.type;
     this->fd=rhs.fd;
     this->cmdType=rhs.cmdType;
@@ -56,7 +58,7 @@ void InternalMessage::setData(const char *lpdata, int iDataSize)
     this->data=new char[iDataSize];
     if(this->data==NULL){
 
-        std::cout<<"GRESKA"<<std::endl;
+        std::cout<<"Data is NULL for fd :"<<fd<<std::endl;
         return;
     }
     dataSize=iDataSize;

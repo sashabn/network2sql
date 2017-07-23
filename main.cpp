@@ -15,7 +15,28 @@
 #include <messageparser.h>
 #include <messageasyncproccessor.h>
 
+int maxLineSize=30;
+
 typedef void Sigfunc(int);
+
+
+int getLineSize(char *line,int num){
+    int lineSize=strlen(line);
+    lineSize+=getIntNumCnt(num);
+    if(maxLineSize<(lineSize+4)){
+        maxLineSize=lineSize+4;
+    }
+    return maxLineSize-lineSize;
+}
+
+int getIntNumCnt(int num){
+    int numCnt=0;
+    while(num){
+        num/=10;
+        numCnt++;
+    }
+    return numCnt;
+}
 
 bool running;
 Sigfunc* signal(int sig, Sigfunc *handler){
@@ -49,10 +70,9 @@ int main(int argc, char *argv[])
 
     InternalMessage *msg=NULL;
     MessageQueue *queue=new MessageQueue();
-    cout<<"PROSO"<<endl;
     MessageAsyncProccessor *mProcess=new MessageAsyncProccessor(queue);
     TcpServer *s=new TcpServer(queue);
-    cout<<"PROSO"<<endl;
+    cout<<"Server is up and running !!!"<<endl;
 
     while(running){
         int rsize;
@@ -63,25 +83,23 @@ int main(int argc, char *argv[])
         MessageParser *parsedMsg=NULL;
         switch (type) {
         case 1://new connection
-            cout<<"Konekcija je uspostavljena sa "<<msg->getData()<<" na socket descriptoru "<<msg->getSenderFd()<<endl;
+            cout<<"Connection establish from: "<<msg->getData()<<" with socket fd: "<<msg->getSenderFd()<<endl;
             break;
         case 2://got message from client
             parsedMsg=new MessageParser(msg->getData(),msg->getDataSize(),msg->getSenderFd());
             mProcess->addMessage(parsedMsg);
-            cout<<"PORUKA DOLAZI SA "<<msg->getSenderFd()<<endl;
-            cout<<"REQUEST "<<parsedMsg->getRadnikId()<<endl;
+            cout<<"Message comes from socket fd: "<<msg->getSenderFd()<<endl;
+            cout<<"radnikId: "<<parsedMsg->getRadnikId()<<endl;
             break;
         case 3://send message to client
-            cout<<"OVO JE PORUKA ZA NETWORK bajti"<<msg->getDataSize()<<endl;
+            cout<<"Prepering to send message bytes: "<<msg->getDataSize()<<" to network client on socket fd: "<<msg->getSenderFd()<<endl;
             if(s->sendDataToClient(msg->getData(),msg->getDataSize(),msg->getSenderFd()))
-                cout<<"Podaci klijentu su uspjesno poslati"<<endl;
+                cout<<"Data size: "<<msg->getDataSize()<<"successfully sent to client with socket fd: "<<msg->getSenderFd()<<endl;
             break;
         }
          delete msg;
     }
-    cout<<"PROSO"<<endl;
     s->stopServer();
-    cout<<"PROSO"<<endl;
     delete s;
     delete mProcess;
     return 1;

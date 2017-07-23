@@ -2,8 +2,9 @@
 #define MESSAGEQUEUE_H
 #include <vector>
 #include <mutex>
-#include "internalmessage.h"
 #include <condition_variable>
+#include "definicije.h"
+#include "internalmessage.h"
 
 
 class MessageQueue

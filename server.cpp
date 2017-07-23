@@ -32,6 +32,6 @@ char *Server::getpeerip(int fd)
 void Server::conAccept(int fd)
 {
     char *wrbuf="Connection accept!";
-    cout<<"PRIHVACAM"<<endl;
+    cout<<"Connection accept on fd: "<<fd<<endl;
      write(fd,wrbuf,strlen(wrbuf));
 }

@@ -9,6 +9,7 @@ MessageQueue::MessageQueue()
 void MessageQueue::addMessage(InternalMessage *m)
 {
        m2.lock();
+       cout<<"Adding message to queue"<<endl;
        messageQueue->push_back(m);
        messageReady=true;
        m2.unlock();
@@ -23,6 +24,11 @@ InternalMessage *MessageQueue::getNextMessage()
     cv.wait(lk,[&]{return messageReady;});
     m2.lock();
     nextMessage=messageQueue->front();
+    if(nextMessage!=NULL){
+        cout<<"Success taking message from queue : Rfid- "<<nextMessage->getRfid()<<" Socket fd- "<<nextMessage->getSenderFd()<<endl;
+    }else{
+        cout<<"Message from queue is null "<<endl;
+    }
     messageQueue->erase(messageQueue->begin());
     if(messageQueue->size()==0){
         messageReady=false;

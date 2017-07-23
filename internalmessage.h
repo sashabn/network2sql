@@ -2,6 +2,7 @@
 #define INTERNALMESSAGE_H
 #include <cstring>
 #include <iostream>
+#include "definicije.h"
 
 class InternalMessage
 {

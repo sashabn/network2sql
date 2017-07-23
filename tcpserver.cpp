@@ -17,14 +17,14 @@ TcpServer::TcpServer(MessageQueue *q):queue(q)
     sndbuff=new char[BUFSIZE];
     if(!createServer()){
         //greska
-        cout<<"GRESKA";
+        cout<<"ERROR create server";
 
         return;
     }else{
         cout<<"Starting server on port "<<m_port<<endl;
     }
     t1=new thread(&TcpServer::run,this);
-    cout<<"KRAJ"<<endl;
+    cout<<"Thread is running"<<endl;
 
 }
 
@@ -35,7 +35,7 @@ TcpServer::~TcpServer()
         if(t1->joinable()){
             t1->join();
             delete t1;
-            cout<<"JEST JEST"<<endl;
+            cout<<"SOFT SHUTDOWN"<<endl;
         }
     }
 }
@@ -54,10 +54,9 @@ void TcpServer::run()
         selectReturn=select(maxfp1,&readSock,NULL,NULL,NULL);
         if(selectReturn<0){
             if(errno==EINTR){
-                cout<<"A OVDE"<<endl;
                 continue;
             }
-            cout<<strerror(errno)<<" "<<"select"<<endl;
+            cout<<strerror(errno)<<" "<<"select error"<<endl;
             serverRun=false;
             continue;
         }
@@ -69,6 +68,7 @@ void TcpServer::run()
                 if(i==sockfd){
 ponovo:
                     csock=accept(i,(sockaddr*)&cliaddr,&clen);
+                    cout<<"Accept connection on fd: "<<csock<<endl;
                     if(csock==-1){
                         if(errno==EINTR)
                             goto ponovo;
@@ -77,7 +77,6 @@ ponovo:
                         continue;
                     }
                     FD_SET(csock,&masterRSock);
-                    //                    maxfp1=max(maxfp1,csock)+1;
                     maxfp1=(maxfp1>csock)?maxfp1:(csock+1);
                     cout<<"maxfp1 je "<<maxfp1<<endl;
                     afterConnect(csock);
@@ -188,9 +187,11 @@ bool TcpServer::createServer()
 
 void TcpServer::afterConnect(int fd)
 {
+    cout<<"Alocating buffer for fd: "<<fd<<endl;
     fdBufferMap[fd]=new NetworkDecoder<TcpServer>(1024*1024*3,this,&TcpServer::parseMsg,fd);
     int sendId[2]={1,fd};
     char *r=Server::getpeerip(fd);
+    cout<<"Peer connected from ip "<<r<<endl;
     m1.lock();
     msg=new InternalMessage();//treba obrisati negde
     msg->setSenderFd(fd);
@@ -203,8 +204,7 @@ void TcpServer::afterConnect(int fd)
 pocetak:
     int sread=read(fd,buffer,BUFSIZE);
     if(sread==0){//konekcija je zavrsena
-        close(fd);
-        FD_CLR(fd,&masterRSock);
+        clientClose(fd);
     }
     if(sread<0){
         if(errno==EAGAIN||errno==EINTR){
@@ -215,7 +215,7 @@ pocetak:
     }
 
     if((res=stringF(buffer,sread,"+OK",3))!=0){
-        cout<<res<<" 0NIJE PROSAO"<<(int)buffer[0]<<" "<<(int)'+'<<" "<<sread<<endl;
+        cout<<"Unknow protocol!!"<<endl;
         this->clientClose(fd);
     }else{
         this->conAccept(fd);
@@ -229,7 +229,7 @@ pocetak:
 void TcpServer::clientClose(int fd)
 {
     char *r=Server::getpeerip(fd);
-    cout<<"Client "<<r<<" was disconnected!!"<<" "<<fd<<endl;
+    cout<<"Client "<<r<<" disconnected!!"<<" "<<fd<<endl;
     delete [] r;
     FD_CLR(fd,&masterRSock);
     FD_CLR(fd,&readSock);
@@ -242,10 +242,8 @@ void TcpServer::clientClose(int fd)
 
 void TcpServer::parseMsg(char *buf, int bufSize,int fd)
 {
-
-
-
     m1.lock();
+    cout<<"Parsing message from fd "<<fd<<endl;
     msg=new InternalMessage();//treba obrisati negde
     msg->setSenderFd(fd);
     msg->setCmdType(2);
@@ -253,9 +251,6 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
 
     queue->addMessage(msg);
     m1.unlock();
-    //    if(bufferSlika!=NULL){
-    //        delete [] bufferSlika;
-    //    }
 }
 
 void TcpServer::testF(char *test, int size)
@@ -266,6 +261,7 @@ void TcpServer::testF(char *test, int size)
 
 bool TcpServer::sendDataToClient(const char *data, int dataSize, int socketfd)
 {
+    cout<<"Sending data size : "<<dataSize<<" to fd: "<<socketfd<<endl;
     const char *ptrBuf=data;
     int bytesLeft=dataSize;
     int bytesSend=0;
@@ -285,5 +281,6 @@ bool TcpServer::sendDataToClient(const char *data, int dataSize, int socketfd)
         bytesSend+=n;
         bytesLeft-=n;
     }
+    cout<<"Data sent success to fd: "<<socketfd<<endl;
     return true;
 }

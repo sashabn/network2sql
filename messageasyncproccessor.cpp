@@ -51,13 +51,14 @@ void MessageAsyncProccessor::run()
         InternalMessage *msg=NULL;
         switch (t) {
         case MessageType::RequestStatus:
+            cout<<"Request status "<<endl;
             msg=db->getResult(p);
             m_queue->addMessage(msg);
             m2.unlock();
             break;
         case MessageType::RequestRadnikPicture:
             msg=file->getRadnikPicture(p);
-            cout<<"SALJEM ZAHTJEV ZA SLIKU bajti"<<msg->getDataSize()<<endl;
+            cout<<"Sending request for picture with size: "<<msg->getDataSize()<<endl;
             m_queue->addMessage(msg);
             m2.unlock();
             break;
@@ -85,7 +86,6 @@ void MessageAsyncProccessor::run()
             break;
         case MessageType::RequestActionSlika:
             msg=file->getRadnikActionPicture(p);
-            cout<<"SALJEM ZAHTJEV ZA SLIKU bajti"<<msg->getDataSize()<<endl;
             m_queue->addMessage(msg);
             m2.unlock();
             break;

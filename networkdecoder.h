@@ -44,15 +44,15 @@ public:
         if(expectedDataSize==0){
             expectedDataSize=findExpectedDataSize(buf,bufSize);
         }
-
-        if((bufSize+currentIndexBuffer)>_maxMessageSize){
-            expectedDataSize=0;
-            currentIndexBuffer=0;
-        }else{
-            int bytesFilled=fillMessageBuffer(buf,bufSize);
-            if(bytesFilled<bufSize){//there is data left in buffer
-                memcpy(buffer+currentIndexBuffer,buf,bufSize-bytesFilled);
-                currentIndexBuffer+=bufSize-bytesFilled;
+        if(expectedDataSize>0){
+            if((bufSize+currentIndexBuffer)>_maxMessageSize){
+                expectedDataSize=0;
+                currentIndexBuffer=0;
+            }else{
+                int bytesFilled=fillMessageBuffer(buf,bufSize);
+                if(bytesFilled<bufSize){//there is data left in buffer
+                    addBuffer(buf+bytesFilled,bufSize-bytesFilled);
+                }
             }
         }
     }
