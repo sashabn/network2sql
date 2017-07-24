@@ -21,6 +21,8 @@ extern int getLineSize(char *line,int num);
 extern int getIntNumCnt(int num);
 using std::cout;
 using std::endl;
+
+
 #define cout cout<<"log in file "<<__FILE__<<" at line "<<__LINE__<<std::right <<std::setw(getLineSize(__FILE__,__LINE__))<<" "
 
 
