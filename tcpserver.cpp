@@ -270,6 +270,7 @@ bool TcpServer::sendDataToClient(const char *data, int dataSize, int socketfd)
         n=write(socketfd,ptrBuf+bytesSend,bytesLeft);
         if(n==0){
             clientClose(socketfd);
+            bytesLeft=0;
             return false;
         }
         if(n<0){

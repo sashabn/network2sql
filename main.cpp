@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
     while(running){
         int rsize;
-        msg=queue->getNextMessage();
+        InternalMessage *msg=queue->getNextMessage();
         if(msg==NULL)
             continue;
         int type=msg->getCmdType();
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
         case 3://send message to client
             cout<<"Prepering to send message bytes: "<<msg->getDataSize()<<" to network client on socket fd: "<<msg->getSenderFd()<<endl;
             if(s->sendDataToClient(msg->getData(),msg->getDataSize(),msg->getSenderFd()))
-                cout<<"Data size: "<<msg->getDataSize()<<"successfully sent to client with socket fd: "<<msg->getSenderFd()<<endl;
+                cout<<"Data size: "<<msg->getDataSize()<<" successfully sent to client with socket fd: "<<msg->getSenderFd()<<" and radnik id: "<<msg->getRfid()<<endl;
             break;
         }
          delete msg;

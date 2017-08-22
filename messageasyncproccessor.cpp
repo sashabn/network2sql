@@ -71,9 +71,6 @@ void MessageAsyncProccessor::run()
         case MessageType::PrivatnoPocetak:
         case MessageType::PrivatnoKraj:
             msg=db->getResult(p);
-            if(msg!=NULL){
-                m_queue->addMessage(msg);
-            }
             m2.unlock();
             break;
         case MessageType::UpdateSlika:
@@ -95,10 +92,5 @@ void MessageAsyncProccessor::run()
             break;
         }
         delete p;
-
-
-
-
-
     }
 }

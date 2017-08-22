@@ -25,7 +25,7 @@ InternalMessage *MessageQueue::getNextMessage()
     m2.lock();
     nextMessage=messageQueue->front();
     if(nextMessage!=NULL){
-        cout<<"Success taking message from queue : Rfid- "<<nextMessage->getRfid()<<" Socket fd- "<<nextMessage->getSenderFd()<<endl;
+        cout<<"Success taking message from queue  Rfid: "<<nextMessage->getRfid()<<" Socket fd "<<nextMessage->getSenderFd()<<endl;
     }else{
         cout<<"Message from queue is null "<<endl;
     }
