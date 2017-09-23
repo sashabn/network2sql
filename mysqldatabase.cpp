@@ -196,6 +196,7 @@ bool MysqlDatabase::radnikPauza(long long int radnikId, QDateTime time)
         return true;
     }
     else{
+        cout<<query->lastError().text().toStdString()<<endl;
         db.close();
         return false;
     }
@@ -225,6 +226,7 @@ bool MysqlDatabase::radnikPrivatno(long long int radnikId, QDateTime time)
         return true;
     }
     else{
+        cout<<query->lastError().text().toStdString()<<endl;
         db.close();
         return false;
     }
