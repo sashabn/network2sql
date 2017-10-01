@@ -7,7 +7,7 @@ InternalMessage::InternalMessage()
 
 InternalMessage::~InternalMessage()
 {
-
+    delete msg;
 }
 
 InternalMessage::InternalMessage(const InternalMessage &rhs)

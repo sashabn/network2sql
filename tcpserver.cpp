@@ -245,10 +245,9 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
     m1.lock();
     cout<<"Parsing message from fd "<<fd<<endl;
     msg=new InternalMessage();//treba obrisati negde
-    msg->setSenderFd(fd);
-    msg->setCmdType(2);
-    msg->setData(buf,bufSize);
-
+    EvNetMessage *netMsg=EvNetMessageBuilder::createMessageFromBytes(buf,bufSize,true);
+    msg->setMsg(netMsg);
+    msg->setFd(fd);
     queue->addMessage(msg);
     m1.unlock();
 }

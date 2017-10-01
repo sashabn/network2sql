@@ -22,7 +22,7 @@ public:
     ~MessageAsyncProccessor();
     void addMessage(MessageParser* p);
 private:
-    vector<MessageParser*> messageQueue;
+    vector<InternalMessage*> messageQueue;
     //thread stuff
     condition_variable cv;
     void run();

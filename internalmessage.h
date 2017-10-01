@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include "definicije.h"
+#include <evnetmessage.h>
 
 class InternalMessage
 {
@@ -10,24 +11,20 @@ public:
     InternalMessage();
     ~InternalMessage();
     InternalMessage(const InternalMessage &rhs);
-    int type;
-    void setRfif(const long long int &rid);
-    void setCmdType(const int &cmdT);
-    void setSenderFd(const int &sFd);
-    void setData(const char *lpdata, int iDataSize);
 
-    long long int getRfid()const;
-    int getCmdType()const;
-    int getSenderFd()const;
-//    const char *getData();
-    const char* getData()const;
-    int getDataSize()const;
+    EvNetMessage *getMsg();
+    void setMsg(EvNetMessage *value);
+
+    int getFd() const;
+    void setFd(int value);
+
+    int getCmdType() const;
+    void setCmdType(int value);
+
 private:
     int fd;//sender
-    int cmdType;//cmd type
-    long long int rfid;//sender primary key
-    char *data;
-    int dataSize;
+    EvNetMessage *msg;
+    int cmdType;
 };
 
 #endif // INTERNALMESSAGE_H

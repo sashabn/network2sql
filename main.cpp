@@ -14,6 +14,8 @@
 #include <internalmessage.h>
 #include <messageparser.h>
 #include <messageasyncproccessor.h>
+#include <evnetmessagebuilder.h>
+#include <evnetmessage.h>
 
 int maxLineSize=30;
 
@@ -64,10 +66,11 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+    char *buffer=new char[1024*1024*3];
     signal(SIGINT,&sighndl);
     signal(SIGUSR1,&sighndl);
     running=true;
-
+    EvNetMessage *msg1=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestEmployeePicture);
     InternalMessage *msg=NULL;
     MessageQueue *queue=new MessageQueue();
     MessageAsyncProccessor *mProcess=new MessageAsyncProccessor(queue);
@@ -86,15 +89,15 @@ int main(int argc, char *argv[])
             cout<<"Connection establish from: "<<msg->getData()<<" with socket fd: "<<msg->getSenderFd()<<endl;
             break;
         case 2://got message from client
-            parsedMsg=new MessageParser(msg->getData(),msg->getDataSize(),msg->getSenderFd());
             mProcess->addMessage(parsedMsg);
             cout<<"Message comes from socket fd: "<<msg->getSenderFd()<<endl;
             cout<<"radnikId: "<<parsedMsg->getRadnikId()<<endl;
             break;
         case 3://send message to client
-            cout<<"Prepering to send message bytes: "<<msg->getDataSize()<<" to network client on socket fd: "<<msg->getSenderFd()<<endl;
-            if(s->sendDataToClient(msg->getData(),msg->getDataSize(),msg->getSenderFd()))
-                cout<<"Data size: "<<msg->getDataSize()<<" successfully sent to client with socket fd: "<<msg->getSenderFd()<<" and radnik id: "<<msg->getRfid()<<endl;
+            cout<<"Prepering to send message bytes: "<<msg->getMsg()->getSize()<<" to network client on socket fd: "<<msg->getFd()<<endl;
+            msg->getMsg()->toByteArray(buffer,0);
+            if(s->sendDataToClient(buffer,msg->getMsg()->getSize(),msg->getFd()))
+                cout<<"Data size: "<<msg->getMsg()->getSize()<<" successfully sent to client with socket fd: "<<msg->getFd()<<endl;
             break;
         }
          delete msg;

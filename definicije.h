@@ -48,7 +48,7 @@ inline int stringF(char *s1, int ls1, char *s2, int ls2)
     return -1;
 }
 
-enum MessageType{RequestStatus=1,
+enum MessageType{RequestStatus1=1,
                 RequestRadnikInfo,
                 RequestRadnikPicture,
                 Ulaz,

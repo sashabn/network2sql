@@ -19,7 +19,7 @@ MessageParser::MessageParser(const char *data, const int &dataSize, int sender):
         mType=(MessageType)type;
         cout<<"Message type "<<type<<endl;
         switch (mType) {
-        case MessageType::RequestStatus:
+        case MessageType::RequestStatus1:
         case MessageType::RequestRadnikInfo:
         case MessageType::RequestRadnikPicture:
             sizeMsg=ntohl(*((int*)ptr));

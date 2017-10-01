@@ -44,3 +44,11 @@ HEADERS += \
 
 LIBS += -lpthread -lmysqlcppconn
 QMAKE_RPATHDIR += ./
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -levidencijaNetworkProtocol
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -levidencijaNetworkProtocol
+else:unix: LIBS += -L$$PWD/./ -levidencijaNetworkProtocol
+else:unix: LIBS += -L$$PWD/./ -levidencijaNetworkProtocol.so.1
+
+INCLUDEPATH += $$PWD/../Documents/projekti/evPro/include
+DEPENDPATH += $$PWD/../Documents/projekti/evPro/include

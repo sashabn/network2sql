@@ -302,7 +302,6 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
 
     EvNetEmployeeId *id=p->getMsg()->getPayload();
     cout<<"Get radnik status radnikid: "<<id->getRfId()<<endl;
-    memset(radnikStatusBuffer,0x00,sizeof(radnikStatusBuffer));
     InternalMessage *msg=new InternalMessage;
     EvNetMessage *netMsg=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestStatus);
     EvNetEmployeeInfo *info=new EvNetEmployeeInfo;
@@ -310,6 +309,8 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
     msg->setMsg(netMsg);
     msg->setCmdType(3);
     msg->setFd(p->getFd());
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
+    delete p;
     db.open();
     query->prepare("select Vrijeme,Ime,Prezime,Funkcija from Podaci where rfid=?");
     query->bindValue(0,id->getRfId());

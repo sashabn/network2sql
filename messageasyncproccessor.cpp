@@ -45,12 +45,12 @@ void MessageAsyncProccessor::run()
             m2.unlock();
             continue;
         }
-        MessageParser *p=messageQueue.front();
+        InternalMessage *p=messageQueue.front();
         messageQueue.erase(messageQueue.begin());
-        MessageType t=p->getMessageType();
+        MessageType t=p->getMsg()->getHdr().getApiId();
         InternalMessage *msg=NULL;
         switch (t) {
-        case MessageType::RequestStatus:
+        case NetworkAPI::RequestStatus:
             cout<<"Request status "<<endl;
             msg=db->getResult(p);
             m_queue->addMessage(msg);

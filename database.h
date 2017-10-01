@@ -7,7 +7,7 @@ class Database
 {
 public:
     Database();
-    virtual InternalMessage *getResult(MessageParser *p)=0;
+    virtual InternalMessage *getResult(InternalMessage *p)=0;
 };
 
 #endif // DATABASE_H

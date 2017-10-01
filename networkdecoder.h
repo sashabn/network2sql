@@ -3,6 +3,7 @@
 #include "definicije.h"
 #include <netinet/in.h>
 #include <cstring>
+#include <evnetutil.h>
 
 /*
 
@@ -102,40 +103,7 @@ private:
     }
 
     int findExpectedDataSize(char *buf,int bufByteSize){
-        int expDataSize=0;
-        MessageType mType=(MessageType)htonl(*((int*)buf));
-        switch (mType) {
-        case MessageType::RequestStatus:
-        case MessageType::RequestRadnikInfo:
-        case MessageType::RequestRadnikPicture:
-            expDataSize=16;
-            break;
-        case MessageType::Ulaz:
-        case MessageType::Izlaz:
-        case MessageType::TerenPocetak:
-        case MessageType::TerenKraj:
-        case MessageType::PauzaPocetak:
-        case MessageType::PauzaKraj:
-        case MessageType::PrivatnoPocetak:
-        case MessageType::PrivatnoKraj:
-        case MessageType::UpdateSlika:
-        case MessageType::RequestActionSlika:
-            expDataSize=readOnePayloadMessageSize(buf,bufByteSize);
-            if(expDataSize<0){
-                expDataSize=0;
-            }
-            break;
-        case MessageType::ActionSlika:
-            //two
-            expDataSize=readTwoPayloadMessageSize(buf,bufByteSize);
-            if(expDataSize<0){
-                expDataSize=0;
-            }
-            break;
-        default:
-            expDataSize=0;
-            break;
-        }
+        int expDataSize=EvNetUtil::fromByteArray<int>(buf,4,true);
         return expDataSize;
     }
 

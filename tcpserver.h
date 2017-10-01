@@ -23,6 +23,9 @@
 #include "networkdecoder.h"
 #include "networkdecoder.h"
 #include <map>
+#include <evnetmessage.h>
+#include <evnetmessagebuilder.h>
+
 
 using namespace std;
 
