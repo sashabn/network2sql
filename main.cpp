@@ -83,15 +83,13 @@ int main(int argc, char *argv[])
         if(msg==NULL)
             continue;
         int type=msg->getCmdType();
-        MessageParser *parsedMsg=NULL;
         switch (type) {
         case 1://new connection
-            cout<<"Connection establish from: "<<msg->getData()<<" with socket fd: "<<msg->getSenderFd()<<endl;
+            cout<<"Connection establish from socket fd: "<<msg->getFd()<<endl;
             break;
         case 2://got message from client
-            mProcess->addMessage(parsedMsg);
-            cout<<"Message comes from socket fd: "<<msg->getSenderFd()<<endl;
-            cout<<"radnikId: "<<parsedMsg->getRadnikId()<<endl;
+            mProcess->addMessage(msg);
+            cout<<"Message comes from socket fd: "<<msg->getFd()<<endl;
             break;
         case 3://send message to client
             cout<<"Prepering to send message bytes: "<<msg->getMsg()->getSize()<<" to network client on socket fd: "<<msg->getFd()<<endl;

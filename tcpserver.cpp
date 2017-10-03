@@ -189,14 +189,12 @@ void TcpServer::afterConnect(int fd)
 {
     cout<<"Alocating buffer for fd: "<<fd<<endl;
     fdBufferMap[fd]=new NetworkDecoder<TcpServer>(1024*1024*3,this,&TcpServer::parseMsg,fd);
-    int sendId[2]={1,fd};
     char *r=Server::getpeerip(fd);
     cout<<"Peer connected from ip "<<r<<endl;
     m1.lock();
     msg=new InternalMessage();//treba obrisati negde
-    msg->setSenderFd(fd);
+    msg->setFd(fd);
     msg->setCmdType(1);
-    msg->setData(r,strlen(r));
     delete [] r;
     queue->addMessage(msg);
     m1.unlock();

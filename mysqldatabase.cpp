@@ -25,46 +25,38 @@ InternalMessage *MysqlDatabase::getResult(InternalMessage *p)
             return getRadnikStatus(p);
             break;
         case NetworkAPI::JobStart:
-            cout<<"Message type ulaz with time "<<dateTime.toString().toStdString()<<endl;
-            radnikUlaz(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type ulaz with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikUlaz(p);
             break;
         case NetworkAPI::JobEnd:
-            cout<<"Message type izlaz with time "<<dateTime.toString().toStdString()<<endl;
-            radnikIzlaz(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type izlaz with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikIzlaz(p);
             break;
 
         case NetworkAPI::WorkOutStart:
-            cout<<"Message type teren pocetak with time "<<dateTime.toString().toStdString()<<endl;
-            radnikTeren(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type teren pocetak with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikTeren(p);
             break;
         case NetworkAPI::WorkOutEnd:
-            cout<<"Message type teren kraj with time "<<dateTime.toString().toStdString()<<endl;
-            radnikTerenKraj(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type teren kraj with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikTerenKraj(p);
             break;
         case NetworkAPI::PauseStart:
-            cout<<"Message type pauza pocetak with time "<<dateTime.toString().toStdString()<<endl;
-            radnikPauza(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type pauza pocetak with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikPauza(p);
             break;
         case NetworkAPI::PauseEnd:
-            cout<<"Message type pauza kraj with time "<<dateTime.toString().toStdString()<<endl;
-            radnikPauzaKraj(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type pauza kraj with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikPauzaKraj(p);
             break;
 
         case NetworkAPI::PrivateStart:
-            cout<<"Message type privatno pocetak with time "<<dateTime.toString().toStdString()<<endl;
-            radnikPrivatno(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type privatno pocetak with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikPrivatno(p);
             break;
         case NetworkAPI::PrivateEnd:
-            cout<<"Message type privatno kraj with time "<<dateTime.toString().toStdString()<<endl;
-            radnikPrivatnoKraj(p->getRadnikId(),dateTime);
-            return NULL;
+            cout<<"Message type privatno kraj with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
+            return radnikPrivatnoKraj(p);
             break;
         default:
             cout<<"Unknow message type"<<endl;
@@ -77,161 +69,273 @@ InternalMessage *MysqlDatabase::getResult(InternalMessage *p)
     }
 }
 
-bool MysqlDatabase::radnikUlaz(long long int radnikId, QDateTime time)
+InternalMessage * MysqlDatabase::radnikUlaz(InternalMessage *p)
 {
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
     db.open();
     query->prepare("insert into Vrijeme (MaticniBroj,Datum,Ulaz,Izlaz,MB) values ((select MaticniBroj from Podaci where rfid=?),?,?,0,(select MaticniBroj from Podaci where rfid=?))");
-    query->bindValue(0,radnikId);
-    query->bindValue(1,time.date());
+    query->bindValue(0,timeInfo->getRfid()->getRfId());
+    query->bindValue(1,dateTime.date());
     query->bindValue(2,time);
-    query->bindValue(3,radnikId);
+    query->bindValue(3,timeInfo->getRfid()->getRfId());
     if(query->exec()){
         cout<<"Query success "<<query->lastQuery().toStdString()<<endl;
         db.close();
         db.open();
         query->prepare("update Podaci set Vrijeme=1 where rfid=?");
-        query->bindValue(0,radnikId);
+        query->bindValue(0,timeInfo->getRfid()->getRfId());
         if(query->exec()){
             db.close();
-            return true;
+            response->setStatus(GenericResponse::Success);
+            response->setCause(GenericResponseCause::NoError);
+            response->setDetail(query->lastQuery().toStdString().c_str());
+            return msg;
         }else{
             cout<<"Query unsuccess "<<query->lastQuery().toStdString()<<endl;
             cout<<"Query error "<<query->lastError().text().toStdString()<<endl;
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
             db.close();
-            return false;
+            return msg;
         }
     }
     else{
         cout<<"Query unsuccess "<<query->lastQuery().toStdString()<<endl;
         cout<<"Query error "<<query->lastError().text().toStdString()<<endl;
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::SqlError);
+        response->setDetail(query->lastError().text().toStdString().c_str());
         db.close();
-        return false;
+        return msg;
     }
 }
 
-bool MysqlDatabase::radnikIzlaz(long long int radnikId, QDateTime time)
+InternalMessage *MysqlDatabase::radnikIzlaz(InternalMessage *p)
 {
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
-    krajCurrentStatus(radnikId,currentStatus,time);
+    EvNetGenericResponse *status=NULL;
+    if((status=krajCurrentStatus((const char*)radnikId,currentStatus,dateTime))->getStatus()==GenericResponse::Fail){
+        msg->getMsg()->setPayload(status);
+        return msg;
+    }
     db.open();
     query->prepare("UPDATE Vrijeme LEFT JOIN  Podaci on Vrijeme.MB=Podaci.MaticniBroj  set Izlaz=? where Podaci.rfid=? and Vrijeme.Izlaz=0");
-    query->bindValue(0,time);
+    query->bindValue(0,dateTime);
     query->bindValue(1,radnikId);
     if(query->exec()){
         cout<<"Query success "<<query->lastQuery().toStdString()<<endl;
         query->prepare("update Podaci set Vrijeme=0 where rfid=?");
         query->bindValue(0,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return msg;
+        }
         cout<<"Query success "<<query->lastQuery().toStdString()<<endl;
         db.close();
-        return true;
-    }
-    else{
+        return msg;
+    }else{
         cout<<"Query unsuccess "<<query->lastQuery().toStdString()<<endl;
         cout<<"Query error "<<query->lastError().text().toStdString()<<endl;
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::SqlError);
+        response->setDetail(query->lastError().text().toStdString().c_str());
         db.close();
-        return false;
+        return msg;
     }
 }
 
-bool MysqlDatabase::radnikTeren(long long int radnikId, QDateTime time)
+InternalMessage *MysqlDatabase::radnikTeren(InternalMessage *p)
 {
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     if(currentStatus==0){
-        radnikUlaz(radnikId,time);
+        InternalMessage *respUlaz=radnikUlaz(p);
+        if(((EvNetGenericResponse*)respUlaz->getMsg()->getPayload())->getStatus()!=GenericResponse::Success){
+            delete msg;
+            return respUlaz;
+        }
     }else{
-        krajCurrentStatus(radnikId,currentStatus,time);
+        EvNetGenericResponse *status=krajCurrentStatus((const char*)radnikId,currentStatus,dateTime);
+        if(status->getStatus()==GenericResponse::Fail){
+            msg->getMsg()->setPayload(status);
+            return msg;
+        }
     }
     db.open();
     query->prepare("insert into Vrijeme (MaticniBroj,Datum,TerenIzlaz,TerenUlaz,MB) values ((select MaticniBroj from Podaci where rfid=?),?,?,0,(select MaticniBroj from Podaci where rfid=?))");
     query->bindValue(0,radnikId);
-    query->bindValue(1,time.date());
-    query->bindValue(2,time);
+    query->bindValue(1,dateTime.date());
+    query->bindValue(2,dateTime);
     query->bindValue(3,radnikId);
     if(query->exec()){
         cout<<"Query success "<<query->lastQuery().toStdString()<<endl;
         query->prepare("update Podaci set Vrijeme=3 where rfid=?");
         query->bindValue(0,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return msg;
+        }
         cout<<"Query success "<<query->lastQuery().toStdString()<<endl;
         db.close();
-        return true;
+        return msg;
     }
     else{
         cout<<"Query unsuccess "<<query->lastQuery().toStdString()<<endl;
         cout<<"Query error "<<query->lastError().text().toStdString()<<endl;
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::SqlError);
+        response->setDetail(query->lastError().text().toStdString().c_str());
         db.close();
-        return false;
+        return msg;
     }
 }
 
-bool MysqlDatabase::radnikTerenKraj(long long int radnikId, QDateTime time)
+InternalMessage *MysqlDatabase::radnikTerenKraj(InternalMessage *p)
 {
-    krajCurrentStatus(radnikId,3,time);
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    char *radnikId=timeInfo->getRfid()->getRfId();
+    EvNetGenericResponse *resp= krajCurrentStatus(radnikId,3,dateTime);
+    msg->getMsg()->setPayload(resp);
+    return msg;
 }
 
-bool MysqlDatabase::radnikPauza(long long int radnikId, QDateTime time)
+InternalMessage *MysqlDatabase::radnikPauza(InternalMessage *p)
 {
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
-    krajCurrentStatus(radnikId,currentStatus,time);
+    EvNetGenericResponse *status=NULL;
+    if((status=krajCurrentStatus((const char*)radnikId,currentStatus,dateTime))->getStatus()==GenericResponse::Fail){
+        msg->getMsg()->setPayload(status);
+        return msg;
+    }
     db.open();
     query->prepare("insert into PauzaEv (MaticniBroj,MB,Datum,PauzaOD,PauzaDO) values ((select MaticniBroj from Podaci where rfid=?),(select MaticniBroj from Podaci where rfid=?),?,?,0)");
     query->bindValue(0,radnikId);
     query->bindValue(1,radnikId);
-    query->bindValue(2,time.date());
-    query->bindValue(3,time);
+    query->bindValue(2,dateTime.date());
+    query->bindValue(3,dateTime);
 
     if(query->exec()){
         query->prepare("update Podaci set Vrijeme=2 where rfid=?");
         query->bindValue(0,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return msg;
+        }
         db.close();
-        return true;
+        return msg;
     }
     else{
         cout<<query->lastError().text().toStdString()<<endl;
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::SqlError);
+        response->setDetail(query->lastError().text().toStdString().c_str());
         db.close();
-        return false;
+        return msg;
     }
 }
 
-bool MysqlDatabase::radnikPauzaKraj(long long int radnikId, QDateTime time)
+InternalMessage *MysqlDatabase::radnikPauzaKraj(InternalMessage *p)
 {
-    krajCurrentStatus(radnikId,2,time);
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    char *radnikId=timeInfo->getRfid()->getRfId();
+    EvNetGenericResponse *resp= krajCurrentStatus(radnikId,2,dateTime);
+    msg->getMsg()->setPayload(resp);
+    return msg;
 }
 
-bool MysqlDatabase::radnikPrivatno(long long int radnikId, QDateTime time)
+InternalMessage * MysqlDatabase::radnikPrivatno(InternalMessage *p)
 {
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
-    krajCurrentStatus(radnikId,currentStatus,time);
+    EvNetGenericResponse *status=NULL;
+    if((status=krajCurrentStatus((const char*)radnikId,currentStatus,dateTime))->getStatus()==GenericResponse::Fail){
+        msg->getMsg()->setPayload(status);
+        return msg;
+    }
     db.open();
     query->prepare("insert into PauzaEv (MaticniBroj,MB,Datum,PrivatnoOD,PrivatnoDO) values ((select MaticniBroj from Podaci where rfid=?),(select MaticniBroj from Podaci where rfid=?),?,?,0)");
     query->bindValue(0,radnikId);
     query->bindValue(1,radnikId);
-    query->bindValue(2,time.date());
-    query->bindValue(3,time);
+    query->bindValue(2,dateTime.date());
+    query->bindValue(3,dateTime);
 
     if(query->exec()){
         query->prepare("update Podaci set Vrijeme=4 where rfid=?");
         query->bindValue(0,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return msg;
+        }
         db.close();
-        return true;
+        return msg;
     }
     else{
         cout<<query->lastError().text().toStdString()<<endl;
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::SqlError);
+        response->setDetail(query->lastError().text().toStdString().c_str());
         db.close();
-        return false;
+        return msg;
     }
 }
 
-bool MysqlDatabase::radnikPrivatnoKraj(long long int radnikId, QDateTime time)
+InternalMessage *MysqlDatabase::radnikPrivatnoKraj(InternalMessage *p)
 {
-    krajCurrentStatus(radnikId,4,time);
+    InternalMessage *msg=createGenericResp(p);
+    EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    char *radnikId=timeInfo->getRfid()->getRfId();
+    EvNetGenericResponse *resp= krajCurrentStatus(radnikId,4,dateTime);
+    msg->getMsg()->setPayload(resp);
+    return msg;
 }
 
-bool MysqlDatabase::krajCurrentStatus(long long int radnikId, int status, QDateTime time)
+EvNetGenericResponse *MysqlDatabase::krajCurrentStatus(const char* radnikId, int status, QDateTime time)
 {
+    EvNetGenericResponse *response=new EvNetGenericResponse;
+    response->setCause(GenericResponseCause::NoError);
+    response->setStatus(GenericResponse::Success);
     cout<<"End current time status radnikId: "<<radnikId<<" status: "<<status<<" time: "<<time.toString().toStdString()<<endl;
     switch(status){
 
@@ -240,11 +344,22 @@ bool MysqlDatabase::krajCurrentStatus(long long int radnikId, int status, QDateT
         query->prepare("UPDATE PauzaEv RIGHT JOIN  Podaci on PauzaEv.MaticniBroj=Podaci.MaticniBroj  set PauzaDO=? where  PauzaEv.PauzaOD !=0 and Podaci.rfid=? and PauzaEv.PauzaDO=0");
         query->bindValue(0,time);
         query->bindValue(1,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            return response;
+        }
         cout<<"Query "<<query->lastQuery().toStdString()<<endl;
         query->prepare("update Podaci set Vrijeme=1 where rfid=?");
         query->bindValue(0,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return response;
+        }
         cout<<"Query "<<query->lastQuery().toStdString()<<endl;
         db.close();
         break;
@@ -253,11 +368,23 @@ bool MysqlDatabase::krajCurrentStatus(long long int radnikId, int status, QDateT
         query->prepare("UPDATE Vrijeme LEFT JOIN  Podaci on Vrijeme.MB=Podaci.MaticniBroj  set TerenUlaz=? where Podaci.rfid=? and Vrijeme.TerenUlaz=0");
         query->bindValue(0,time);
         query->bindValue(1,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return response;
+        }
         cout<<"Query "<<query->lastQuery().toStdString()<<endl;
         query->prepare("update Podaci set Vrijeme=1 where rfid=?");
         query->bindValue(0,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return response;
+        }
         cout<<"Query "<<query->lastQuery().toStdString()<<endl;
         db.close();
         break;
@@ -266,29 +393,43 @@ bool MysqlDatabase::krajCurrentStatus(long long int radnikId, int status, QDateT
         query->prepare("UPDATE PauzaEv RIGHT JOIN  Podaci on PauzaEv.MaticniBroj=Podaci.MaticniBroj  set PrivatnoDO=? where PauzaEv.PrivatnoOD !=0 and Podaci.rfid=? and PauzaEv.PrivatnoDO=0");
         query->bindValue(0,time);
         query->bindValue(1,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return response;
+        }
         cout<<"Query "<<query->lastQuery().toStdString()<<endl;
         query->prepare("update Podaci set Vrijeme=1 where rfid=?");
         query->bindValue(0,radnikId);
-        query->exec();
+        if(!query->exec()){
+            response->setStatus(GenericResponse::Fail);
+            response->setCause(GenericResponseCause::SqlError);
+            response->setDetail(query->lastError().text().toStdString().c_str());
+            cout<<"Query "<<query->lastQuery().toStdString()<<endl;
+            return response;
+        }
         cout<<"Query "<<query->lastQuery().toStdString()<<endl;
         db.close();
         break;
     default:
-        return true;
+        return response;
         break;
     }
 
-    return true;
+    return response;
 }
 
-int MysqlDatabase::getRadnikStatus(long long int radnikId)
+int MysqlDatabase::getRadnikStatus(const char *radnikID)
 {
-    cout<<"Get radnik status radnikid: "<<radnikId<<endl;
+    cout<<"Get radnik status radnikid: "<<radnikID<<endl;
     db.open();
     query->prepare("select Vrijeme from Podaci where rfid=?");
-    query->bindValue(0,radnikId);
-    query->exec();
+    query->bindValue(0,radnikID);
+    if(!query->exec()){
+        return -1;
+    }
     cout<<"Query "<<query->lastQuery().toStdString()<<endl;
     db.close();
     while(query->next()){
@@ -300,7 +441,7 @@ int MysqlDatabase::getRadnikStatus(long long int radnikId)
 InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
 {
 
-    EvNetEmployeeId *id=p->getMsg()->getPayload();
+    EvNetEmployeeId *id=(EvNetEmployeeId *)p->getMsg()->getPayload();
     cout<<"Get radnik status radnikid: "<<id->getRfId()<<endl;
     memset(radnikStatusBuffer,0x00,sizeof(radnikStatusBuffer));
     InternalMessage *msg=new InternalMessage;
@@ -318,7 +459,7 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
     db.close();
     while(query->next()){
         int vrijemeStatus=query->value(0).toInt();
-        info->setStatus(*((EvNetEmployeeStatus)EvNetMessageBuilder::createEmplStatus((EmployeeStatus)vrijemeStatus));
+        info->setStatus((EvNetEmployeeStatus*)EvNetMessageBuilder::createEmplStatus((EmployeeStatus)vrijemeStatus));
         cout<<"Time status is "<<vrijemeStatus<<endl;
         info->setName(query->value(1).toString().toStdString().c_str());
         cout<<"Name: "<<info->getName()<<endl;
@@ -335,7 +476,7 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
         return msg;
     }
     cout<<"No data for radnik id: "<<id->getRfId()<<endl;
-    info->setStatus(EvNetMessageBuilder::createEmployeeStatus(*((EvNetEmployeeStatus)(EmployeeStatus)500)));
+    info->setStatus((EvNetEmployeeStatus*)EvNetMessageBuilder::createEmplStatus(EmployeeStatus::ERR));
     return msg;
 
 }
@@ -344,4 +485,17 @@ int MysqlDatabase::fillBuff(void *dst, void *src, int size)
 {
     memcpy(dst,src,size);
     return size;
+}
+
+InternalMessage *MysqlDatabase::createGenericResp(InternalMessage *p)
+{
+    InternalMessage *msg=new InternalMessage;
+    msg->setCmdType(2);
+    msg->setFd(p->getFd());
+    msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(p->getMsg()->getHdr().getApiId()));
+    EvNetGenericResponse *response=new EvNetGenericResponse;
+    response->setCause(GenericResponseCause::NoError);
+    response->setStatus(GenericResponse::Success);
+    msg->getMsg()->setPayload(response);
+    return msg;
 }

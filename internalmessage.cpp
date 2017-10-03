@@ -7,7 +7,7 @@ InternalMessage::InternalMessage()
 
 InternalMessage::~InternalMessage()
 {
-
+    delete msg;
 }
 
 InternalMessage::InternalMessage(const InternalMessage &rhs)
@@ -46,8 +46,5 @@ void InternalMessage::setCmdType(int value)
     cmdType = value;
 }
 
-void InternalMessage::setRfif(const long long int &rid)
-{
-    rfid=rid;
-}
+
 

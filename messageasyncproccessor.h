@@ -20,7 +20,7 @@ class MessageAsyncProccessor
 public:
     MessageAsyncProccessor(MessageQueue *queue);
     ~MessageAsyncProccessor();
-    void addMessage(MessageParser* p);
+    void addMessage(InternalMessage* p);
 private:
     vector<InternalMessage*> messageQueue;
     //thread stuff

@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QDir>
 #include <QDateTime>
+#include <evnetmessagebuilder.h>
 
 using namespace std;
 
@@ -16,10 +17,10 @@ class FileProvider
 {
 public:
     FileProvider();
-    InternalMessage *getRadnikPicture(MessageParser *r);
-    InternalMessage *getRadnikActionPicture(MessageParser *r);
-    bool saveRadnikPicture(MessageParser *r);
-    bool saveRadnikActionPicture(MessageParser *r);
+    InternalMessage *getRadnikPicture(InternalMessage *r);
+    InternalMessage *getRadnikActionPicture(InternalMessage *r);
+    bool saveRadnikPicture(InternalMessage *r);
+    bool saveRadnikActionPicture(InternalMessage *r);
 private:
     std::string picLoc;
 };

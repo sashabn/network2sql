@@ -34,21 +34,23 @@ private:
     QString dbPassword;
     QString dbDatabaseName;
     char radnikStatusBuffer[512];
-    bool radnikUlaz(long long int radnikId,QDateTime time);
-    bool radnikIzlaz(long long int radnikId,QDateTime time);
-    bool radnikTeren(long long int radnikId,QDateTime time);
-    bool radnikTerenKraj(long long int radnikId,QDateTime time);
-    bool radnikPauza(long long int radnikId,QDateTime time);
-    bool radnikPauzaKraj(long long int radnikId,QDateTime time);
-    bool radnikPrivatno(long long int radnikId,QDateTime time);
-    bool radnikPrivatnoKraj(long long int radnikId,QDateTime time);
-    bool krajCurrentStatus(long long int radnikId,int status,QDateTime time);
-    int getRadnikStatus(long long int radnikId);
+    InternalMessage *radnikUlaz(InternalMessage *p);
+    InternalMessage *radnikIzlaz(InternalMessage *p);
+    InternalMessage *radnikTeren(InternalMessage *p);
+    InternalMessage *radnikTerenKraj(InternalMessage *p);
+    InternalMessage *radnikPauza(InternalMessage *p);
+    InternalMessage *radnikPauzaKraj(InternalMessage *p);
+    InternalMessage *radnikPrivatno(InternalMessage *p);
+    InternalMessage *radnikPrivatnoKraj(InternalMessage *p);
+    EvNetGenericResponse *krajCurrentStatus(const char* radnikId,int status,QDateTime time);
+    int getRadnikStatus(const char *radnikID);
 
     //functions
     InternalMessage *getRadnikStatus(InternalMessage *p);
     static int fillBuff(void *dst,void *src,int size);
 //    int constructBuffer()
+
+    InternalMessage *createGenericResp(InternalMessage* p);
 
 
 

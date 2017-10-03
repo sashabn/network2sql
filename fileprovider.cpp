@@ -5,22 +5,31 @@ FileProvider::FileProvider()
     picLoc="/opt/pictures/";
 }
 
-InternalMessage *FileProvider::getRadnikPicture(MessageParser *r)
+InternalMessage *FileProvider::getRadnikPicture(InternalMessage *r)
 {
-    cout<<"Get profile picture for radnikId: "<<r->getRadnikId()<<endl;
+    EvNetEmployeeId *id=(EvNetEmployeeId*)r->getMsg()->getPayload();
+    cout<<"Get profile picture for radnikId: "<<id->getRfId()<<endl;
     InternalMessage *msg=new InternalMessage;
     msg->setCmdType(3);
-    msg->setRfif(r->getRadnikId());
-    msg->setSenderFd(r->getSenderFd());
+    msg->setFd(r->getFd());
+    msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
+
+    EvNetEmployeePicture *empPic=new EvNetEmployeePicture;
+    msg->getMsg()->setPayload(empPic);
 
     string tmp=picLoc;
+    empPic->setRfid(new EvNetEmployeeId(*id));
+    empPic->setPicType(PictureTypeContainer::JPEG);
+
     stringstream ss;
-    ss<<r->getRadnikId();
+    ss<<id->getRfId();
     string pic;
     ss>>pic;
     tmp.append(pic);
     tmp.append(".jpg");
+    empPic->setPictureName(tmp.c_str());
     cout<<"Picture location "<<tmp<<endl;
+
     ifstream picFile(tmp);
     if(picFile.is_open()){
         int picSize;
@@ -28,38 +37,23 @@ InternalMessage *FileProvider::getRadnikPicture(MessageParser *r)
         picFile.seekg(0,ios_base::end);
         picSize=picFile.tellg();
         picSize=picSize-beg;
-        cout<<"Picture bytes count "<<picSize<<endl;
         picFile.seekg(ios_base::beg);
-        char *buffer=new char[picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/];
-        char *ptrBuff=buffer;
-
-        int idPoruke=htonl(2);
-        memcpy(ptrBuff,&idPoruke,sizeof(idPoruke));
-        ptrBuff+=sizeof(idPoruke);
-
-        long long int radnikId=htobe64(r->getRadnikId());
-        memcpy(ptrBuff,&radnikId,sizeof(radnikId));
-        ptrBuff+=sizeof(radnikId);
-
-        int tipP=htonl(4);
-        memcpy(ptrBuff,&tipP,sizeof(tipP));
-        ptrBuff+=sizeof(tipP);
-
-        int picS=htonl(picSize);
-        memcpy(ptrBuff,&picS,sizeof(picS));
-        ptrBuff+=sizeof(picS);
-
-        picFile.read(ptrBuff,picSize);
+        cout<<"Picture bytes count "<<picSize<<endl;
+        char *picBuff=new char[picSize];
+        if(picBuff==NULL){
+            return msg;
+        }
+        empPic->setPictureSize(picSize);
+        picFile.read(picBuff,picSize);
         cout<<"Copy picture bytes in buffer. Bytes count: "<<picSize<<endl;
-        msg->setData(buffer,picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/);
-        cout<<"Bytes copiend, cleaning buffer"<<endl;
-        delete [] buffer;
+        empPic->setPicData(picBuff);
         return msg;
 
     }else{
-        cout<<"Radnik Id: "<<r->getRadnikId()<< " does not have picture "<<endl;
+        cout<<"Radnik Id: "<<id->getRfId()<< " does not have picture "<<endl;
         string ttmp=picLoc;
         ttmp.append("default.jpg");
+        empPic->setPictureName("default.jpg");
         picFile.open(ttmp);
         ifstream picFileD(ttmp);
         int picSize;
@@ -69,43 +63,30 @@ InternalMessage *FileProvider::getRadnikPicture(MessageParser *r)
         picSize=picSize-beg;
         cout<<"Default picture bytes count "<<picSize<<endl;
         picFileD.seekg(ios_base::beg);
-        char *buffer=new char[picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/];
-        char *ptrBuff=buffer;
 
-        int idPoruke=htonl(2);
-        memcpy(ptrBuff,&idPoruke,sizeof(idPoruke));
-        ptrBuff+=sizeof(idPoruke);
-
-        long long int radnikId=htobe64(r->getRadnikId());
-        memcpy(ptrBuff,&radnikId,sizeof(radnikId));
-        ptrBuff+=sizeof(radnikId);
-
-        int tipP=htonl(4);
-        memcpy(ptrBuff,&tipP,sizeof(tipP));
-        ptrBuff+=sizeof(tipP);
-
-        int picS=htonl(picSize);
-        memcpy(ptrBuff,&picS,sizeof(picS));
-        ptrBuff+=sizeof(picS);
-
-
-        picFileD.read(ptrBuff,picSize);
+        char *picBuff=new char[picSize];
+        if(picBuff==NULL){
+            return msg;
+        }
+        empPic->setPictureSize(picSize);
+        picFile.read(picBuff,picSize);
         cout<<"Copy picture bytes in buffer. Bytes count: "<<picSize<<endl;
-        msg->setData(buffer,picSize+sizeof(int)/*id poruke*/+sizeof(long long int)/*radnik id*/+sizeof(int)/*tip poruke*/+sizeof(int)/*velicina poruke*/);
-        cout<<"Bytes copiend, cleaning buffer"<<endl;
-        delete [] buffer;
+        empPic->setPicData(picBuff);
+
         return msg;
 
     }
 }
 
-InternalMessage *FileProvider::getRadnikActionPicture(MessageParser *r)
+InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
 {
+    EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)r->getMsg()->getPayload();
     cout<<"Request for action picture of radnikId: "<<r->getRadnikId()<<endl;
     InternalMessage *msg=new InternalMessage;
     msg->setCmdType(3);
-    msg->setRfif(r->getRadnikId());
-    msg->setSenderFd(r->getSenderFd());
+    msg->setFd(r->getFd());
+    msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
+
 
     string tmp=picLoc;
     stringstream ss;
@@ -197,7 +178,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(MessageParser *r)
     }
 }
 
-bool FileProvider::saveRadnikPicture(MessageParser *r)
+bool FileProvider::saveRadnikPicture(InternalMessage *r)
 {
 
     string tmp=picLoc;
@@ -233,7 +214,7 @@ bool FileProvider::saveRadnikPicture(MessageParser *r)
 
 }
 
-bool FileProvider::saveRadnikActionPicture(MessageParser *r)
+bool FileProvider::saveRadnikActionPicture(InternalMessage *r)
 {
     cout<<"Save action picture for radnikId: "<<r->getRadnikId()<<endl;
     string tmp=picLoc;
