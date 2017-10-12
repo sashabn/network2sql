@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
                 cout<<"Data size: "<<msg->getMsg()->getSize()<<" successfully sent to client with socket fd: "<<msg->getFd()<<endl;
             break;
         }
-         delete msg;
+         //delete msg;
     }
     s->stopServer();
     delete s;

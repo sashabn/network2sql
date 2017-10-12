@@ -84,6 +84,7 @@ ponovo:
                 }else{//konekcija dolazi sa klijenta
 ponovoRead:
                     res=read(i,buffer,BUFSIZE);
+                    cout<<"Bytes read: "<<res<<endl;
                     if(res<0){
                         if(errno==EINTR){
                             goto ponovoRead;
@@ -195,6 +196,9 @@ void TcpServer::afterConnect(int fd)
     msg=new InternalMessage();//treba obrisati negde
     msg->setFd(fd);
     msg->setCmdType(1);
+    msg->setMsg(new EvNetMessage);
+    msg->getMsg()->getHdr().setApiId(NetworkAPI::NetworkConnectionInfo);
+    msg->getMsg()->setPayload(new EvNetEmptyPayload);
     delete [] r;
     queue->addMessage(msg);
     m1.unlock();
@@ -246,6 +250,7 @@ void TcpServer::parseMsg(char *buf, int bufSize,int fd)
     EvNetMessage *netMsg=EvNetMessageBuilder::createMessageFromBytes(buf,bufSize,true);
     msg->setMsg(netMsg);
     msg->setFd(fd);
+    msg->setCmdType(2);
     queue->addMessage(msg);
     m1.unlock();
 }

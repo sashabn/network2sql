@@ -104,6 +104,7 @@ private:
 
     int findExpectedDataSize(char *buf,int bufByteSize){
         int expDataSize=EvNetUtil::fromByteArray<int>(buf,4,true);
+        cout<<"Expected data size: "<<expDataSize<<endl;
         return expDataSize;
     }
 

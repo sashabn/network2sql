@@ -51,6 +51,7 @@ void MessageAsyncProccessor::run()
         InternalMessage *msg=NULL;
         switch (t) {
         case NetworkAPI::RequestStatus:
+        case NetworkAPI::RequestEmployeeInfo:
             cout<<"Request status "<<endl;
             msg=db->getResult(p);
             m_queue->addMessage(msg);

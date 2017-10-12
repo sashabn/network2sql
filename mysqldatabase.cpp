@@ -22,6 +22,7 @@ InternalMessage *MysqlDatabase::getResult(InternalMessage *p)
         NetworkAPI t=p->getMsg()->getHdr().getApiId();
         switch (t) {
         case NetworkAPI::RequestStatus:
+        case NetworkAPI::RequestEmployeeInfo:
             return getRadnikStatus(p);
             break;
         case NetworkAPI::JobStart:
@@ -447,10 +448,12 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
     InternalMessage *msg=new InternalMessage;
     EvNetMessage *netMsg=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestStatus);
     EvNetEmployeeInfo *info=new EvNetEmployeeInfo;
-    netMsg->setPayload(info);
-    msg->setMsg(netMsg);
-    msg->setCmdType(3);
-    msg->setFd(p->getFd());
+//    EvNetMessage *netMsg=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestStatus);
+//    EvNetEmployeeInfo *info=new EvNetEmployeeInfo;
+//    netMsg->setPayload(info);
+//    msg->setMsg(netMsg);
+//    msg->setCmdType(3);
+//    msg->setFd(p->getFd());
     db.open();
     query->prepare("select Vrijeme,Ime,Prezime,Funkcija from Podaci where rfid=?");
     query->bindValue(0,id->getRfId());
