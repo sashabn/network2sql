@@ -15,7 +15,7 @@ InternalMessage *FileProvider::getRadnikPicture(InternalMessage *r)
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
 
     EvNetEmployeePicture *empPic=new EvNetEmployeePicture;
-    msg->getMsg()->setPayload(empPic);
+
 
     string tmp=picLoc;
     empPic->setRfid(new EvNetEmployeeId(*id));
@@ -47,6 +47,7 @@ InternalMessage *FileProvider::getRadnikPicture(InternalMessage *r)
         picFile.read(picBuff,picSize);
         cout<<"Copy picture bytes in buffer. Bytes count: "<<picSize<<endl;
         empPic->setPicData(picBuff);
+        msg->getMsg()->setPayload(empPic);
         return msg;
 
     }else{
@@ -72,7 +73,7 @@ InternalMessage *FileProvider::getRadnikPicture(InternalMessage *r)
         picFile.read(picBuff,picSize);
         cout<<"Copy picture bytes in buffer. Bytes count: "<<picSize<<endl;
         empPic->setPicData(picBuff);
-
+        msg->getMsg()->setPayload(empPic);
         return msg;
 
     }

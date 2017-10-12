@@ -446,16 +446,15 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
     cout<<"Get radnik status radnikid: "<<id->getRfId()<<endl;
     memset(radnikStatusBuffer,0x00,sizeof(radnikStatusBuffer));
     InternalMessage *msg=new InternalMessage;
-    EvNetMessage *netMsg=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestStatus);
     EvNetEmployeeInfo *info=new EvNetEmployeeInfo;
-//    EvNetMessage *netMsg=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestStatus);
-//    EvNetEmployeeInfo *info=new EvNetEmployeeInfo;
-//    netMsg->setPayload(info);
-//    msg->setMsg(netMsg);
-//    msg->setCmdType(3);
-//    msg->setFd(p->getFd());
+    info->setRfid(id);
+    EvNetMessage *netMsg=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestStatus);
+    netMsg->setPayload(info);
+    msg->setMsg(netMsg);
+    msg->setCmdType(3);
+    msg->setFd(p->getFd());
     db.open();
-    query->prepare("select Vrijeme,Ime,Prezime,Funkcija from Podaci where rfid=?");
+    query->prepare("select Vrijeme,Ime,Prezime,Funkcija,MaticniBroj from Podaci where rfid=?");
     query->bindValue(0,id->getRfId());
     query->exec();
     cout<<"Query "<<query->lastQuery().toStdString()<<endl;
@@ -472,6 +471,8 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
 
         info->setFunction(query->value(3).toString().toStdString().c_str());
         cout<<"Function: "<<info->getFunction();
+
+        info->setId(query->value(4).toString().toStdString().c_str());
 
         msg->setMsg(netMsg);
 
