@@ -83,12 +83,10 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
     msg->setFd(r->getFd());
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
     EvNetTimePicture *timePic=new EvNetTimePicture;
-    EvNetEmployeePicture *netPicture=new EvNetEmployeePicture;
-    EvNetTimeInfo *netTime=new EvNetTimeInfo(*timeInfo);
-    timePic->setTime(netTime);
-    timePic->setPicture(netPicture);
-    msg->getMsg()->setPayload(timePic);
-    netPicture->getRfid()->setRfId(timeInfo->getRfid()->getRfId());
+    timePic->getTime()->setTime(timeInfo->getTime());
+    timePic->getTime()->getRfid()->setRfId(timeInfo->getRfid()->getRfId());
+
+    timePic->getPicture()->getRfid()->setRfId(timeInfo->getRfid()->getRfId());
 
 
     string tmp=picLoc;
@@ -97,8 +95,8 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
     // old func tmp.append(QDateTime::fromMSecsSinceEpoch(QString(r->getTime()).toLong()).toString("dd_MM_yyyy_hh_mm_ss").toStdString());
     tmp.append(QDateTime::fromString(timeInfo->getTime(),DATE_TIME_FORMAT).toString("dd_MM_yyyy_hh_mm_ss").toStdString());
     tmp.append(".jpg");
-    netPicture->setPictureName(tmp.c_str());
-    netPicture->setPicType(PictureTypeContainer::JPEG);
+    timePic->getPicture()->setPictureName(tmp.c_str());
+    timePic->getPicture()->setPicType(PictureTypeContainer::JPEG);
 
     cout<<"Picture location "<<tmp<<endl;
     ifstream picFile(tmp);
@@ -110,7 +108,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
         picSize=picFile.tellg();
         picSize=picSize-beg;
         cout<<"Picture bytes count "<<picSize<<endl;
-        netPicture->setPictureSize(picSize);
+        timePic->getPicture()->setPictureSize(picSize);
         picFile.seekg(ios_base::beg);
         char *picBuff=new char[picSize];
         if(picBuff==NULL){
@@ -118,15 +116,16 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
         }
         picFile.read(picBuff,picSize);
         cout<<"Copy picture bytes in buffer. Bytes count: "<<picSize<<endl;
-        netPicture->setPicData(picBuff);
+        timePic->getPicture()->setPicData(picBuff);
         cout<<"Bytes copiend, cleaning buffer"<<endl;
+        msg->getMsg()->setPayload(timePic);
         return msg;
 
     }else{
         cout<<"radnikId: "<<timeInfo->getRfid()->getRfId()<<" does not have picture for time: "<<timeInfo->getTime()<<endl;
         cout<<"Sending default picture "<<endl;
-        netPicture->setPictureName(tmp.c_str());
-        netPicture->setPicType(PictureTypeContainer::JPEG);
+        timePic->getPicture()->setPictureName(tmp.c_str());
+        timePic->getPicture()->setPicType(PictureTypeContainer::JPEG);
         string ttmp=picLoc;
         ttmp.append("default.jpg");
         picFile.open(ttmp);
@@ -144,8 +143,9 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
         }
         picFile.read(picBuff,picSize);
         cout<<"Copy picture bytes in buffer. Bytes count: "<<picSize<<endl;
-        netPicture->setPicData(picBuff);
+        timePic->getPicture()->setPicData(picBuff);
         cout<<"Bytes copiend, cleaning buffer"<<endl;
+        msg->getMsg()->setPayload(timePic);
         return msg;
     }
 }
