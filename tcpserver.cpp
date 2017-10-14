@@ -215,17 +215,7 @@ pocetak:
         this->clientClose(fd);
         return;
     }
-
-    if((res=stringF(buffer,sread,"+OK",3))!=0){
-        cout<<"Unknow protocol!!"<<endl;
-        this->clientClose(fd);
-    }else{
-        this->conAccept(fd);
-    }
-    buffer[sread]='\0';
-    cout<<buffer<<endl;
-
-
+    fdBufferMap[fd]->addBuffer(buffer,sread);
 }
 
 void TcpServer::clientClose(int fd)
@@ -286,4 +276,23 @@ bool TcpServer::sendDataToClient(const char *data, int dataSize, int socketfd)
     }
     cout<<"Data sent success to fd: "<<socketfd<<endl;
     return true;
+}
+
+bool TcpServer::proccessMessage(InternalMessage *msg)
+{
+    EvNetGenericResponse *resp=NULL;
+    switch (msg->getMsg()->getHdr().getApiId()) {
+    case NetworkAPI::NetworkConnectionRequest:
+        resp=(EvNetGenericResponse*)msg->getMsg()->getPayload();
+        if(resp->getStatus()==GenericResponse::Success){
+            this->conAccept(msg->getFd());
+        }else{
+            this->clientClose(msg->getFd());
+        }
+        break;
+    default:
+        break;
+    }
+    msg->getMsg()->toByteArray(buffer,0);
+    return this->sendDataToClient(buffer,msg->getMsg()->getSize(),msg->getFd());
 }

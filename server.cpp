@@ -31,7 +31,5 @@ char *Server::getpeerip(int fd)
 
 void Server::conAccept(int fd)
 {
-    char *wrbuf="Connection accept!";
     cout<<"Connection accept on fd: "<<fd<<endl;
-     write(fd,wrbuf,strlen(wrbuf));
 }

@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
         switch (type) {
         case 1://new connection
             cout<<"Connection establish from socket fd: "<<msg->getFd()<<endl;
+            delete msg;
             break;
         case 2://got message from client
             mProcess->addMessage(msg);
@@ -93,12 +94,14 @@ int main(int argc, char *argv[])
             break;
         case 3://send message to client
             cout<<"Prepering to send message bytes: "<<msg->getMsg()->getSize()<<" to network client on socket fd: "<<msg->getFd()<<endl;
-            msg->getMsg()->toByteArray(buffer,0);
-            if(s->sendDataToClient(buffer,msg->getMsg()->getSize(),msg->getFd()))
+
+            if(s->proccessMessage(msg))
                 cout<<"Data size: "<<msg->getMsg()->getSize()<<" successfully sent to client with socket fd: "<<msg->getFd()<<endl;
+            delete msg;
             break;
+
         }
-         //delete msg;
+
     }
     s->stopServer();
     delete s;

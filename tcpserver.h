@@ -34,9 +34,10 @@ class TcpServer : public Server
 {
 public:
     TcpServer(MessageQueue *q);
-    ~TcpServer();
+    virtual ~TcpServer();
     void stopServer();
     virtual bool sendDataToClient(const char *data,int dataSize,int socketfd);
+    virtual bool proccessMessage(InternalMessage *msg);
 private:
     void run();
     typedef void Sigfunc(int);

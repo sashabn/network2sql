@@ -34,6 +34,7 @@ private:
     QString dbPassword;
     QString dbDatabaseName;
     char radnikStatusBuffer[512];
+    InternalMessage *connectionRequest(InternalMessage *p);
     InternalMessage *radnikUlaz(InternalMessage *p);
     InternalMessage *radnikIzlaz(InternalMessage *p);
     InternalMessage *radnikTeren(InternalMessage *p);

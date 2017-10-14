@@ -72,14 +72,17 @@ void MessageAsyncProccessor::run()
         case NetworkAPI::PrivateStart:
         case NetworkAPI::PrivateEnd:
             msg=db->getResult(p);
+            m_queue->addMessage(msg);
             m2.unlock();
             break;
         case NetworkAPI::UpdateEmployeeProfilePicture:
-            file->saveRadnikPicture(p);
+            msg=file->saveRadnikPicture(p);
+            m_queue->addMessage(msg);
             m2.unlock();
             break;
         case NetworkAPI::TimePicture:
-            file->saveRadnikActionPicture(p);
+            msg=file->saveRadnikActionPicture(p);
+            m_queue->addMessage(msg);
             m2.unlock();
             break;
         case NetworkAPI::RequestTimePicture:
@@ -87,7 +90,19 @@ void MessageAsyncProccessor::run()
             m_queue->addMessage(msg);
             m2.unlock();
             break;
-
+        case NetworkAPI::NetworkConnectionRequest:
+            msg=db->getResult(p);
+            m_queue->addMessage(msg);
+            m2.unlock();
+            break;
+        case NetworkAPI::Ping:
+            msg=new InternalMessage;
+            msg->setFd(p->getFd());
+            msg->setCmdType(3);
+            msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(Pong));
+            msg->getMsg()->setPayload(new EvNetEmptyPayload);
+            m_queue->addMessage(msg);
+            m2.unlock();
         default:
             m2.unlock();
             break;

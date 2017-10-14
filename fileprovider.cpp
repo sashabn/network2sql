@@ -20,12 +20,7 @@ InternalMessage *FileProvider::getRadnikPicture(InternalMessage *r)
     string tmp=picLoc;
     empPic->setRfid(new EvNetEmployeeId(*id));
     empPic->setPicType(PictureTypeContainer::JPEG);
-
-    stringstream ss;
-    ss<<id->getRfId();
-    string pic;
-    ss>>pic;
-    tmp.append(pic);
+    tmp.append(id->getRfId());
     tmp.append(".jpg");
     empPic->setPictureName(tmp.c_str());
     cout<<"Picture location "<<tmp<<endl;
@@ -82,7 +77,7 @@ InternalMessage *FileProvider::getRadnikPicture(InternalMessage *r)
 InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
 {
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)r->getMsg()->getPayload();
-    cout<<"Request for action picture of radnikId: "<<timeInfo->getRfid()<<endl;
+    cout<<"Request for action picture of radnikId: "<<timeInfo->getRfid()->getRfId()<<endl;
     InternalMessage *msg=new InternalMessage;
     msg->setCmdType(3);
     msg->setFd(r->getFd());
@@ -93,15 +88,11 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
     timePic->setTime(netTime);
     timePic->setPicture(netPicture);
     msg->getMsg()->setPayload(timePic);
-    netPicture->setRfid(timeInfo->getRfid());
+    netPicture->getRfid()->setRfId(timeInfo->getRfid()->getRfId());
 
 
     string tmp=picLoc;
-    stringstream ss;
-    ss<<timeInfo->getRfid();
-    string pic;
-    ss>>pic;
-    tmp.append(pic);
+    tmp.append(timeInfo->getRfid()->getRfId());
     tmp.append("_");
     // old func tmp.append(QDateTime::fromMSecsSinceEpoch(QString(r->getTime()).toLong()).toString("dd_MM_yyyy_hh_mm_ss").toStdString());
     tmp.append(QDateTime::fromString(timeInfo->getTime(),DATE_TIME_FORMAT).toString("dd_MM_yyyy_hh_mm_ss").toStdString());
@@ -112,7 +103,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
     cout<<"Picture location "<<tmp<<endl;
     ifstream picFile(tmp);
     if(picFile.is_open()){
-        cout<<timeInfo->getRfid()<<" have picture for time :"<<timeInfo->getTime()<<endl;
+        cout<<timeInfo->getRfid()->getRfId()<<" have picture for time :"<<timeInfo->getTime()<<endl;
         int picSize;
         int beg=picFile.tellg();
         picFile.seekg(0,ios_base::end);
@@ -132,7 +123,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
         return msg;
 
     }else{
-        cout<<"radnikId: "<<timeInfo->getRfid()<<" does not have picture for time: "<<timeInfo->getTime()<<endl;
+        cout<<"radnikId: "<<timeInfo->getRfid()->getRfId()<<" does not have picture for time: "<<timeInfo->getTime()<<endl;
         cout<<"Sending default picture "<<endl;
         netPicture->setPictureName(tmp.c_str());
         netPicture->setPicType(PictureTypeContainer::JPEG);
@@ -159,7 +150,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
     }
 }
 
-bool FileProvider::saveRadnikPicture(InternalMessage *r)
+InternalMessage *FileProvider::saveRadnikPicture(InternalMessage *r)
 {
     EvNetEmployeePicture *evPic=(EvNetEmployeePicture*)r->getMsg()->getPayload();
     InternalMessage *msg=new InternalMessage;
@@ -170,11 +161,7 @@ bool FileProvider::saveRadnikPicture(InternalMessage *r)
     msg->getMsg()->setPayload(resp);
 
     string tmp=picLoc;
-    stringstream ss;
-    ss<<evPic->getRfid();
-    string pic;
-    ss>>pic;
-    tmp.append(pic);
+    tmp.append(evPic->getRfid()->getRfId());
     tmp.append(".jpg");
     cout<<"Picture path "<<tmp<<endl;
     ofstream picFile(tmp);
@@ -212,7 +199,7 @@ bool FileProvider::saveRadnikPicture(InternalMessage *r)
 
 }
 
-bool FileProvider::saveRadnikActionPicture(InternalMessage *r)
+InternalMessage *FileProvider::saveRadnikActionPicture(InternalMessage *r)
 {
     EvNetTimePicture *tPic=(EvNetTimePicture *)r->getMsg()->getPayload();
     InternalMessage *msg=new InternalMessage;
@@ -221,13 +208,9 @@ bool FileProvider::saveRadnikActionPicture(InternalMessage *r)
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
     EvNetGenericResponse *resp=new EvNetGenericResponse;
     msg->getMsg()->setPayload(resp);
-    cout<<"Save action picture for radnikId: "<<tPic->getPicture()->getRfid()<<endl;
+    cout<<"Save action picture for radnikId: "<<tPic->getPicture()->getRfid()->getRfId()<<endl;
     string tmp=picLoc;
-    stringstream ss;
-    ss<<tPic->getPicture()->getRfid();
-    string pic;
-    ss>>pic;
-    tmp.append(pic);
+    tmp.append(tPic->getPicture()->getRfid()->getRfId());
     tmp.append("_");
     tmp.append(QDateTime::fromString(tPic->getTime()->getTime(),DATE_TIME_FORMAT).toString("dd_MM_yyyy_hh_mm_ss").toStdString());
     tmp.append(".jpg");

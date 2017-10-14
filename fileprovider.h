@@ -19,8 +19,8 @@ public:
     FileProvider();
     InternalMessage *getRadnikPicture(InternalMessage *r);
     InternalMessage *getRadnikActionPicture(InternalMessage *r);
-    bool saveRadnikPicture(InternalMessage *r);
-    bool saveRadnikActionPicture(InternalMessage *r);
+    InternalMessage *saveRadnikPicture(InternalMessage *r);
+    InternalMessage *saveRadnikActionPicture(InternalMessage *r);
 private:
     std::string picLoc;
 };

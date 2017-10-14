@@ -59,6 +59,9 @@ InternalMessage *MysqlDatabase::getResult(InternalMessage *p)
             cout<<"Message type privatno kraj with time "<<((EvNetTimeInfo*)p->getMsg()->getPayload())->getTime()<<endl;
             return radnikPrivatnoKraj(p);
             break;
+        case NetworkAPI::NetworkConnectionRequest:
+            return connectionRequest(p);
+            break;
         default:
             cout<<"Unknow message type"<<endl;
             return NULL;
@@ -70,17 +73,23 @@ InternalMessage *MysqlDatabase::getResult(InternalMessage *p)
     }
 }
 
+InternalMessage *MysqlDatabase::connectionRequest(InternalMessage *p)
+{
+    InternalMessage *msg=createGenericResp(p);
+    return msg;
+}
+
 InternalMessage * MysqlDatabase::radnikUlaz(InternalMessage *p)
 {
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     db.open();
     query->prepare("insert into Vrijeme (MaticniBroj,Datum,Ulaz,Izlaz,MB) values ((select MaticniBroj from Podaci where rfid=?),?,?,0,(select MaticniBroj from Podaci where rfid=?))");
     query->bindValue(0,timeInfo->getRfid()->getRfId());
     query->bindValue(1,dateTime.date());
-    query->bindValue(2,time);
+    query->bindValue(2,dateTime);
     query->bindValue(3,timeInfo->getRfid()->getRfId());
     if(query->exec()){
         cout<<"Query success "<<query->lastQuery().toStdString()<<endl;
@@ -120,7 +129,7 @@ InternalMessage *MysqlDatabase::radnikIzlaz(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     EvNetGenericResponse *status=NULL;
@@ -128,6 +137,7 @@ InternalMessage *MysqlDatabase::radnikIzlaz(InternalMessage *p)
         msg->getMsg()->setPayload(status);
         return msg;
     }
+    msg->getMsg()->setPayload(status);
     db.open();
     query->prepare("UPDATE Vrijeme LEFT JOIN  Podaci on Vrijeme.MB=Podaci.MaticniBroj  set Izlaz=? where Podaci.rfid=? and Vrijeme.Izlaz=0");
     query->bindValue(0,dateTime);
@@ -162,7 +172,7 @@ InternalMessage *MysqlDatabase::radnikTeren(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     if(currentStatus==0){
@@ -170,12 +180,16 @@ InternalMessage *MysqlDatabase::radnikTeren(InternalMessage *p)
         if(((EvNetGenericResponse*)respUlaz->getMsg()->getPayload())->getStatus()!=GenericResponse::Success){
             delete msg;
             return respUlaz;
+        }else{
+            delete respUlaz;
         }
     }else{
         EvNetGenericResponse *status=krajCurrentStatus((const char*)radnikId,currentStatus,dateTime);
         if(status->getStatus()==GenericResponse::Fail){
             msg->getMsg()->setPayload(status);
             return msg;
+        }else{
+            msg->getMsg()->setPayload(status);
         }
     }
     db.open();
@@ -215,7 +229,7 @@ InternalMessage *MysqlDatabase::radnikTerenKraj(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     EvNetGenericResponse *resp= krajCurrentStatus(radnikId,3,dateTime);
     msg->getMsg()->setPayload(resp);
@@ -227,7 +241,7 @@ InternalMessage *MysqlDatabase::radnikPauza(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     EvNetGenericResponse *status=NULL;
@@ -235,6 +249,7 @@ InternalMessage *MysqlDatabase::radnikPauza(InternalMessage *p)
         msg->getMsg()->setPayload(status);
         return msg;
     }
+    msg->getMsg()->setPayload(status);
     db.open();
     query->prepare("insert into PauzaEv (MaticniBroj,MB,Datum,PauzaOD,PauzaDO) values ((select MaticniBroj from Podaci where rfid=?),(select MaticniBroj from Podaci where rfid=?),?,?,0)");
     query->bindValue(0,radnikId);
@@ -270,7 +285,7 @@ InternalMessage *MysqlDatabase::radnikPauzaKraj(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     EvNetGenericResponse *resp= krajCurrentStatus(radnikId,2,dateTime);
     msg->getMsg()->setPayload(resp);
@@ -282,7 +297,7 @@ InternalMessage * MysqlDatabase::radnikPrivatno(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     EvNetGenericResponse *status=NULL;
@@ -290,6 +305,7 @@ InternalMessage * MysqlDatabase::radnikPrivatno(InternalMessage *p)
         msg->getMsg()->setPayload(status);
         return msg;
     }
+    msg->getMsg()->setPayload(status);
     db.open();
     query->prepare("insert into PauzaEv (MaticniBroj,MB,Datum,PrivatnoOD,PrivatnoDO) values ((select MaticniBroj from Podaci where rfid=?),(select MaticniBroj from Podaci where rfid=?),?,?,0)");
     query->bindValue(0,radnikId);
@@ -325,7 +341,7 @@ InternalMessage *MysqlDatabase::radnikPrivatnoKraj(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
-    QDateTime dateTime=QDateTime::fromString(timeInfo->getTime());
+    QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     EvNetGenericResponse *resp= krajCurrentStatus(radnikId,4,dateTime);
     msg->getMsg()->setPayload(resp);
@@ -453,6 +469,9 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
     msg->setMsg(netMsg);
     msg->setCmdType(3);
     msg->setFd(p->getFd());
+    if(strlen(id->getRfId())<2){
+        return msg;
+    }
     db.open();
     query->prepare("select Vrijeme,Ime,Prezime,Funkcija,MaticniBroj from Podaci where rfid=?");
     query->bindValue(0,id->getRfId());
@@ -494,7 +513,7 @@ int MysqlDatabase::fillBuff(void *dst, void *src, int size)
 InternalMessage *MysqlDatabase::createGenericResp(InternalMessage *p)
 {
     InternalMessage *msg=new InternalMessage;
-    msg->setCmdType(2);
+    msg->setCmdType(3);
     msg->setFd(p->getFd());
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(p->getMsg()->getHdr().getApiId()));
     EvNetGenericResponse *response=new EvNetGenericResponse;
