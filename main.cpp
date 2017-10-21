@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
             delete msg;
             break;
         case 2://got message from client
-            mProcess->addMessage(msg);
             cout<<"Message comes from socket fd: "<<msg->getFd()<<endl;
+            mProcess->addMessage(msg);            
             break;
         case 3://send message to client
             cout<<"Prepering to send message bytes: "<<msg->getMsg()->getSize()<<" to network client on socket fd: "<<msg->getFd()<<endl;

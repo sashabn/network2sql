@@ -85,6 +85,12 @@ InternalMessage * MysqlDatabase::radnikUlaz(InternalMessage *p)
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
+    int currentStatus=getRadnikStatus(timeInfo->getRfid()->getRfId());
+    if(currentStatus==(int)OnJob){
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::AlreadyExist);
+        response->setDetail("Update time error: Employee is already on job");
+    }
     db.open();
     query->prepare("insert into Vrijeme (MaticniBroj,Datum,Ulaz,Izlaz,MB) values ((select MaticniBroj from Podaci where rfid=?),?,?,0,(select MaticniBroj from Podaci where rfid=?))");
     query->bindValue(0,timeInfo->getRfid()->getRfId());
@@ -175,6 +181,12 @@ InternalMessage *MysqlDatabase::radnikTeren(InternalMessage *p)
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
+    if(currentStatus==(int)WorkOut){
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::AlreadyExist);
+        response->setDetail("Update time error: Employee is already on workout");
+        return msg;
+    }
     if(currentStatus==0){
         InternalMessage *respUlaz=radnikUlaz(p);
         if(((EvNetGenericResponse*)respUlaz->getMsg()->getPayload())->getStatus()!=GenericResponse::Success){
@@ -244,6 +256,12 @@ InternalMessage *MysqlDatabase::radnikPauza(InternalMessage *p)
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
+    if(currentStatus==(int)OnPause){
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::AlreadyExist);
+        response->setDetail("Update time error: Employee is already on pause");
+        return msg;
+    }
     EvNetGenericResponse *status=NULL;
     if((status=krajCurrentStatus((const char*)radnikId,currentStatus,dateTime))->getStatus()==GenericResponse::Fail){
         msg->getMsg()->setPayload(status);
@@ -300,6 +318,12 @@ InternalMessage * MysqlDatabase::radnikPrivatno(InternalMessage *p)
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
+    if(currentStatus==(int)OnPrivate){
+        response->setStatus(GenericResponse::Fail);
+        response->setCause(GenericResponseCause::AlreadyExist);
+        response->setDetail("Update time error: Employee is already on private");
+        return msg;
+    }
     EvNetGenericResponse *status=NULL;
     if((status=krajCurrentStatus((const char*)radnikId,currentStatus,dateTime))->getStatus()==GenericResponse::Fail){
         msg->getMsg()->setPayload(status);
@@ -469,6 +493,7 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
     msg->setMsg(netMsg);
     msg->setCmdType(3);
     msg->setFd(p->getFd());
+    info->setStatus((EvNetEmployeeStatus*)EvNetMessageBuilder::createEmplStatus(EmployeeStatus::NotFoundInDatabase));
     if(strlen(id->getRfId())<2){
         return msg;
     }
@@ -499,7 +524,7 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
         return msg;
     }
     cout<<"No data for radnik id: "<<id->getRfId()<<endl;
-    info->setStatus((EvNetEmployeeStatus*)EvNetMessageBuilder::createEmplStatus(EmployeeStatus::ERR));
+
     return msg;
 
 }
