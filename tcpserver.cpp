@@ -293,6 +293,6 @@ bool TcpServer::proccessMessage(InternalMessage *msg)
     default:
         break;
     }
-    msg->getMsg()->toByteArray(buffer,0);
-    return this->sendDataToClient(buffer,msg->getMsg()->getSize(),msg->getFd());
+    msg->getMsg()->toByteArray(sndbuff,0);
+    return this->sendDataToClient(sndbuff,msg->getMsg()->getSize(),msg->getFd());
 }

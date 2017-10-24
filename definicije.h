@@ -6,7 +6,7 @@ struct message {
     long type;
     char *msg;
 };
-#define BUFSIZE 4096
+#define BUFSIZE 4*1024*1024
 
 #define CLIENT_CONNECTED 1
 #define CLIENT_SEND_MESSAGE 2

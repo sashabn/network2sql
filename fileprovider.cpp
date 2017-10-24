@@ -13,6 +13,7 @@ InternalMessage *FileProvider::getRadnikPicture(InternalMessage *r)
     msg->setCmdType(3);
     msg->setFd(r->getFd());
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
+    msg->getMsg()->getHdr().setTransId(r->getMsg()->getHdr().getTransId());
 
     EvNetEmployeePicture *empPic=new EvNetEmployeePicture;
 
@@ -82,6 +83,7 @@ InternalMessage *FileProvider::getRadnikActionPicture(InternalMessage *r)
     msg->setCmdType(3);
     msg->setFd(r->getFd());
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
+    msg->getMsg()->getHdr().setTransId(r->getMsg()->getHdr().getTransId());
     EvNetTimePicture *timePic=new EvNetTimePicture;
     timePic->getTime()->setTime(timeInfo->getTime());
     timePic->getTime()->getRfid()->setRfId(timeInfo->getRfid()->getRfId());
@@ -157,6 +159,7 @@ InternalMessage *FileProvider::saveRadnikPicture(InternalMessage *r)
     msg->setCmdType(3);
     msg->setFd(r->getFd());
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
+    msg->getMsg()->getHdr().setTransId(r->getMsg()->getHdr().getTransId());
     EvNetGenericResponse *resp=new EvNetGenericResponse;
     msg->getMsg()->setPayload(resp);
 
@@ -206,6 +209,7 @@ InternalMessage *FileProvider::saveRadnikActionPicture(InternalMessage *r)
     msg->setCmdType(3);
     msg->setFd(r->getFd());
     msg->setMsg(EvNetMessageBuilder::createMsgWithHdr(r->getMsg()->getHdr().getApiId()));
+    msg->getMsg()->getHdr().setTransId(r->getMsg()->getHdr().getTransId());
     EvNetGenericResponse *resp=new EvNetGenericResponse;
     msg->getMsg()->setPayload(resp);
     cout<<"Save action picture for radnikId: "<<tPic->getPicture()->getRfid()->getRfId()<<endl;

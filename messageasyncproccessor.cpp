@@ -24,6 +24,9 @@ void MessageAsyncProccessor::addMessage(InternalMessage *p)
         return;
     }
     m2.lock();
+    if(p==NULL){
+        m2.unlock();
+    }
     messageQueue.push_back(p);
     m2.unlock();
     messageArrive=true;

@@ -20,8 +20,7 @@ SOURCES += main.cpp \
     messagequeue.cpp \
     evprotocolheader.cpp \
     evprotocolmsg.cpp \
-    evprotocolpayload.cpp \
-    networkdecoder.cpp
+    evprotocolpayload.cpp
 
 HEADERS += \
     server.h \
@@ -39,8 +38,7 @@ HEADERS += \
     messagequeue.h \
     evprotocolheader.h \
     evprotocolmsg.h \
-    evprotocolpayload.h \
-    networkdecoder.h
+    evprotocolpayload.h
 
 LIBS += -lpthread -lmysqlcppconn
 QMAKE_RPATHDIR += ./

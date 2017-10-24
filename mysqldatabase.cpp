@@ -82,6 +82,7 @@ InternalMessage *MysqlDatabase::connectionRequest(InternalMessage *p)
 InternalMessage * MysqlDatabase::radnikUlaz(InternalMessage *p)
 {
     InternalMessage *msg=createGenericResp(p);
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
@@ -136,6 +137,7 @@ InternalMessage *MysqlDatabase::radnikIzlaz(InternalMessage *p)
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     EvNetGenericResponse *status=NULL;
@@ -179,6 +181,7 @@ InternalMessage *MysqlDatabase::radnikTeren(InternalMessage *p)
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     if(currentStatus==(int)WorkOut){
@@ -242,6 +245,7 @@ InternalMessage *MysqlDatabase::radnikTerenKraj(InternalMessage *p)
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     char *radnikId=timeInfo->getRfid()->getRfId();
     EvNetGenericResponse *resp= krajCurrentStatus(radnikId,3,dateTime);
     msg->getMsg()->setPayload(resp);
@@ -253,6 +257,7 @@ InternalMessage *MysqlDatabase::radnikPauza(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
@@ -304,6 +309,7 @@ InternalMessage *MysqlDatabase::radnikPauzaKraj(InternalMessage *p)
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     char *radnikId=timeInfo->getRfid()->getRfId();
     EvNetGenericResponse *resp= krajCurrentStatus(radnikId,2,dateTime);
     msg->getMsg()->setPayload(resp);
@@ -316,6 +322,7 @@ InternalMessage * MysqlDatabase::radnikPrivatno(InternalMessage *p)
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     char *radnikId=timeInfo->getRfid()->getRfId();
     int currentStatus=getRadnikStatus(radnikId);
     if(currentStatus==(int)OnPrivate){
@@ -365,6 +372,7 @@ InternalMessage *MysqlDatabase::radnikPrivatnoKraj(InternalMessage *p)
     InternalMessage *msg=createGenericResp(p);
     EvNetGenericResponse *response = (EvNetGenericResponse*)msg->getMsg()->getPayload();
     EvNetTimeInfo *timeInfo=(EvNetTimeInfo *)p->getMsg()->getPayload();
+    msg->getMsg()->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     QDateTime dateTime=QDateTime::fromString(QString::fromStdString(timeInfo->getTime()),DATE_TIME_FORMAT);
     char *radnikId=timeInfo->getRfid()->getRfId();
     EvNetGenericResponse *resp= krajCurrentStatus(radnikId,4,dateTime);
@@ -489,6 +497,7 @@ InternalMessage *MysqlDatabase::getRadnikStatus(InternalMessage *p)
     EvNetEmployeeInfo *info=new EvNetEmployeeInfo;
     info->setRfid(id);
     EvNetMessage *netMsg=EvNetMessageBuilder::createMsgWithHdr(NetworkAPI::RequestStatus);
+    netMsg->getHdr().setTransId(p->getMsg()->getHdr().getTransId());
     netMsg->setPayload(info);
     msg->setMsg(netMsg);
     msg->setCmdType(3);
