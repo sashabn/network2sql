@@ -43,8 +43,8 @@ private:
     InternalMessage *radnikPauzaKraj(InternalMessage *p);
     InternalMessage *radnikPrivatno(InternalMessage *p);
     InternalMessage *radnikPrivatnoKraj(InternalMessage *p);
-    EvNetGenericResponse *krajCurrentStatus(const char* radnikId,int status,QDateTime time);
-    int getRadnikStatus(const char *radnikID);
+    EvNetGenericResponse *krajCurrentStatus(long long radnikId, int status, QDateTime time);
+    int getRadnikStatus(long long radnikID);
 
     //functions
     InternalMessage *getRadnikStatus(InternalMessage *p);
