@@ -7,7 +7,7 @@ TcpServer::TcpServer(MessageQueue *q):queue(q)
     sockfd=-1;
     msg=NULL;
     t1=NULL;
-    m_port=1929;
+    m_port=2929;
     selectReturn=0;
     maxfp1=0;
     serverRun=true;
